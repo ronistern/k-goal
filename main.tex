@@ -1,6 +1,7 @@
 \documentclass{aicom2e}
+\usepackage[algo2e,ruled,vlined,linesnumbered]{algorithm2e}
 \usepackage[active]{srcltx}
-\usepackage{ amsthm, amssymb,amsfonts}
+\usepackage{amsthm, amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{epsfig}
 \usepackage{latexsym}
@@ -23,6 +24,8 @@
 \newtheorem{lemma}{Lemma}
 \newcommand{\kgs}{$k$-goal search}
 \newcommand{\astar}{A$^*$}
+\newcommand{\tuple}[1]{\ensuremath{\left \langle #1 \right \rangle }}
+\newcommand{\open}{\textsc{Open}}
 
 \begin{document}
 \begin{frontmatter}                           % The preamble begins here.
@@ -57,100 +60,111 @@ artificial intelligence\sep AI\sep Heuristic Search
 \section*{Introduction}
 
 
-\section{Problem Definition}
+\section{Background and Problem Definition}
 
 %In this section, we formally define the $k$-goal search problem.
-Let $G=(V,E,w)$ be a weighted graph, where $w:E\rightarrow \mathbb{R}^+$ be the weight function, i.e., for an edge $e\in E$ the value $w(e)$ is its weight. The $k$-goal search problem is defined as follows. 
+In this section we provide relevant background and formally define the \kgs\ problem. 
+Let $G=(V,E,w)$ be a weighted graph, where $w:E\rightarrow \mathbb{R}^+$ be the weight function, i.e., for an edge $e\in E$ the value $w(e)$ is its weight. 
+The shortest path problem (SPP) is the problem of finding the lowest cost path in $G$ from a given start vertex $s$ to a goal vertex $g$. SPP has been well studied in the literature. Best-first search (BFS) is a popular algorithmic framework for solving SPP, and classical SPP algorithms like Dijkstra's algorithm and \astar{} are special cases of it. Algorithm~\ref{alg:bfs} provides a high-level pseudo-code for BFS. 
+
+
+[[TODO: Background on BFS and on \astar{}. Talking also about admissible heuristics]]
+
+
+\begin{algorithm2e}[t!]
+\begin{footnotesize}
+\SetAlgoLined 
+\SetKwBlock{BFS}{best-first-search(start state $s$, goal state $g$)}{end} \BFS{
+    Bla\\
+    \open{}~$\gets\{s\}$; \\
+    \While {\open{} $\neq \emptyset$} {
+        $best \gets \texttt{ChooseNode}(\open{})$ \nllabel{line:open:chooseNode}\\
+        Remove $best$ from \open{}\\
+                \lIf {$best$ is a goal}{\Return $best$}
+        \For{$n \in neighbors(best)$}{
+            Add $n$ to \open{}\\
+        }
+    }
+} 
+\label{alg:bfs}
+\end{footnotesize}
+\end{algorithm2e}
+
+
+
+
+The $\texttt{ChooseNode}$ function (line~\ref{line:open:chooseNode} in Alg.~\ref{alg:bfs}) is often implemented by defining a node evaluation function $F$, such that 
+the chosen node is the one with the minimal $F$ value. For example, Dijsktra's algorithm is a BFS in which $F=g$, and \astar{} is a BFS in which $F=f=g+h$. 
+
+
+
+
+The $k$-goal search problem can be viewed as a generalization of SPP, and is defined as follows. 
 
 \begin{definition}[$k$-goal search]
 Given a weighted graph $G$, a start vertex $s\in V$, and $k$ goal vertices 
 $g_1, g_2,\ldots g_k\in V$, the task is to find $k$ paths $p_1,\ldots p_k$ 
 such that for every $i\in [1,k]$ it holds that $p_i$ is a lowest-cost path from $s$ to $g_i$. 
-\end{definitition}
+\end{definition}
 
 % k searches independentaly
-A trivial solution to the \kgs\ problem is to consider it as $k$ independent shortest path problem,
-and use a shortest path algorithm such as Dijkstra's algorithm~\cite{} or \astar{}~\cite{}. 
+Clearly, SPP is a special case of \kgs\ with $k=1$. A trivial solution to the \kgs\ problem is to consider it as $k$ independent shortest path problem,
+and use a SPP algorithm such as Dijkstra's algorithm~\cite{} or \astar{}~\cite{}. 
 In this work we explore different approaches for solving the \kgs\ problem that try to reuse information between the $k$ tasks. 
 
 
-\section{One Search for $k$-Goals}
+\section{One BFS for $k$-Goal Search}
 
-
-\begin{algorithm}[t!]
-\begin{footnotesize}
-\SetAlgoLined \SetKwBlock{BFS}{best-first-search(start state $s$, goal state $g$)}{end} \BFS{
-    \open{}~$\gets\{s\}$; \\
-    \While {\open{} $\neq \emptyset$} {
-        $best \gets \texttt{ChooseNode}(\open{})$ \nllabel{line:open:chooseNode}\\
-        Remove $best$ from \open{}\\
-                \lIf {$best$ is a goal}{\Return $best$}
-        \For{$n \in neighbors(best)$}{
-            Add $n$ to \open{}\\
-        }
-    }
-} \caption{Best-First Search} \label{alg:bfs}
-\end{footnotesize}
-\end{algorithm}
-
-
-Best-first search (BFS) is a popular algorithmic framework for solving shortest path problems. 
-In this section we show how BFS, and in particular \astar{}, can be extended to find $k$ shortest path. For completeness, we provide here a short backgroun on BFS and \astar{}. 
-
-[[TODO: Background on BFS and on \astar{}. Talking also about admissible heuristics]]
-
-
-
-\subsection{BFS for $k$-Goal Search}
-\begin{algorithm}[t!]
-\begin{footnotesize}
-\SetAlgoLined \SetKwBlock{BFS}{best-first-search(start state $s$, goal state $g$)}{end} \BFS{
-    \open{}~$\gets\{s\}$; \\
-    \While {\open{} $\neq \emptyset$} {
-        $best \gets \texttt{ChooseNode}(\open{})$ \nllabel{line:open:chooseNode}\\
-        Remove $best$ from \open{}\\
-                \lIf {$best$ is a goal}{\Return $best$}
-        \For{$n \in neighbors(best)$}{
-            Add $n$ to \open{}\\
-        }
-    }
-} \caption{Best-First Search} \label{alg:bfs}
-\end{footnotesize}
-\end{algorithm}
+In this section we explore how to find solve the \kgs{} using a single BFS. This is motivated by the understanding that performing $k$ different searches may
+explore the same node multiple times. 
 To extend BFS to solve the \kgs\ problem, the following algorithmic components 
 must be modified. 
+
 \begin{itemize}
     \item {\bf Information stored per node.} When searching for a single lowest-cost path, every node in \open{} stored two values: the $g$-value and the $h$-value. To extend BFS to solve the \kgs\ problem, we store for every node $k+1$ values: the $g$-value and the $h$-value for each of the $k$ goals. Consequently, when every a node is generated, the heuristic funciton must be computed for each of the $k$ goal.
-    \item {\bf Stopping condition.} When one of the goal vertices is expanded, the found path to that goal is returned to the user. However, the search does not halt until lowest-cost paths to all $k$ are found. Therefore, after a path to a goal is found the search continues, expanding the found goal vertex and inserting its children to \open{}. 
+    \item {\bf Stopping condition.} When one of the goal vertices is expanded, the found path to that goal is returned to the user. However, the search does not halt until lowest-cost paths to all $k$ are found. Therefore, after a path to a goal is found the search continues, expanding the found goal vertex and inserting its children to \open . 
 \end{itemize}
 Note that after finding a lowest-cost path to a goal $g_i$ there is no point in
 computing the $h$-value for it. 
 
-In addition to these easy-to-implement changes, there is the question of which node to choose to expand in every iteration. In \astar{}, the node with the minimal $f=g+h$ value is chosen. 
-In \kgs{}, however, there are multiple $h$ values and correspondingly multiple $f$ values, one per goal. This raises the question of how to choose the best node in \open{}
- when solving the \kgs{} problem?
+In addition to these easy-to-implement changes, 
+there is the question of which node to choose to expand in every iteration. 
+In \astar{}, the node with the minimal $f=g+h$ value is chosen. 
+In \kgs{}, however, there are $k$ heuristic values for each node $n$, $h_1(n),\ldots,h_k(n)$, 
+which are the heuristic estimate of the cost to get from $n$ to goal $g_1,\ldots,g_k$, respectively.  
+Consequently, each node has multiple  $f$ values, $f_1(n),\ldots,f_k(n)$, one per goal. 
+This raises the question of how to define the node evaluation function $F$ for \kgs{}, 
+i.e,. which node to choose from \open{} in every iteration when solving the \kgs{} problem?
+
+
  
- 
- One way to answer this question is by choosing the node with the 
+ We propose the following three options. 
+ \begin{itemize}
+     \item {\bf Min-$f$.} $F(n)=\min_{i\in [1,k]}f_i(n)$. 
+     \item {\bf Max-$f$.} $F(n)=\max_{i\in [1,k]}f_i(n)$. 
+     \item {\bf Random-$f$.} $F(n)=ChooseRandom(f_1(n),\ldots,f_k(n))$. 
+ \end{itemize}
+ [[Meir, please put here your example of why MAX-$f$ failes. I guess it also applies to Random-$f$?]]
 
-
-
-
-
-extend the information stored in a node in \open{}. 
-
-
+\subsection{Runtime Analysis}
 % Analysis
-It is common to estimate the runtime of BFS by counting the number of nodes that are expanded until the goal is found. 
+Now, we compare the the two approaches descibed bove -- $k$ separate SPP problems or one BFS to return all the $k$ paths. 
+It is common to estimate the runtime of BFS by counting the number of nodes that are expanded until the goal is found. However, we can show that both approaches will expand the same set of nodes.  However, the computation done per node is different. 
+
+[[Here will come Ariel's analysis of the runtime]]
+
+
+
 
 \section{Experimental Results}
-
+[[Here will come experimental results]]
 
 \subsection*{Related work}
 
 There are several well-studied graph problems that are related to $k$-goal search. In the traveling salesman problem (TSP), we aim to find a shortest path that passes through a set of vertices. 
 ...
 
+\section{Conclusion and Future Work}
 
 % \begin{figure}[!htbp]
 %   \centering
