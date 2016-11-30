@@ -26,6 +26,7 @@
 \newcommand{\astar}{A$^*$}
 \newcommand{\tuple}[1]{\ensuremath{\left \langle #1 \right \rangle }}
 \newcommand{\open}{\textsc{Open}}
+\newenvironment{proof}{\noindent{\bf Proof:~~}}{\qed}
 
 \begin{document}
 \begin{frontmatter}                           % The preamble begins here.
@@ -65,7 +66,10 @@ artificial intelligence\sep AI\sep Heuristic Search
 %In this section, we formally define the $k$-goal search problem.
 In this section we provide relevant background and formally define the \kgs\ problem. 
 Let $G=(V,E,w)$ be a weighted graph, where $w:E\rightarrow \mathbb{R}^+$ be the weight function, i.e., for an edge $e\in E$ the value $w(e)$ is its weight. 
-The shortest path problem (SPP) is the problem of finding the lowest cost path in $G$ from a given start vertex $s$ to a goal vertex $g$. SPP has been well studied in the literature. Best-first search (BFS) is a popular algorithmic framework for solving SPP, and classical SPP algorithms like Dijkstra's algorithm and \astar{} are special cases of it. Algorithm~\ref{alg:bfs} provides a high-level pseudo-code for BFS. 
+The shortest path problem (SPP) is the problem of finding the lowest cost path in $G$ from a given start vertex $s$ to a goal vertex $g$. 
+
+SPP has been well-studied in the literature. A popular framework for solving SPP is Best-first search (BFS). There are many path-finding algorithms that are based on BFS, including classical SPP algorithms like Dijkstra's algorithm~\cite{} and \astar{}. 
+    While BFS has many variants, Algorithm~\ref{alg:bfs} provides a high-level pseudo-code for BFS. 
 
 
 [[TODO: Background on BFS and on \astar{}. Talking also about admissible heuristics]]
@@ -136,15 +140,30 @@ Consequently, each node has multiple  $f$ values, $f_1(n),\ldots,f_k(n)$, one pe
 This raises the question of how to define the node evaluation function $F$ for \kgs{}, 
 i.e,. which node to choose from \open{} in every iteration when solving the \kgs{} problem?
 
+We discuss next the following two options. 
+\begin{itemize}
+ \item {\bf Min-$f$.} $F(n)=\min_{i\in [1,k]}f_i(n)$. 
+ \item {\bf Max-$f$.} $F(n)=\max_{i\in [1,k]}f_i(n)$. 
+ %\item {\bf Random-$f$.} $F(n)=ChooseRandom(f_1(n),\ldots,f_k(n))$. 
+\end{itemize}
 
+\begin{theorem}[Min-$f$ is admissible]
+Using an admissible heuristic, 
+When using an admissible heursitic and running a BFS that uses Min-$f$ as an evaluation function,
+then when each goal $g_i$ is expanded for the firts time it is guaranteed that the lowest-cost path to $g_i$ has been found. 
+\label{the:min-f}
+\end{theorem}
+ \begin{proof}
+ TODO
+ \end{proof}
  
- We propose the following three options. 
- \begin{itemize}
-     \item {\bf Min-$f$.} $F(n)=\min_{i\in [1,k]}f_i(n)$. 
-     \item {\bf Max-$f$.} $F(n)=\max_{i\in [1,k]}f_i(n)$. 
-     \item {\bf Random-$f$.} $F(n)=ChooseRandom(f_1(n),\ldots,f_k(n))$. 
- \end{itemize}
- [[Meir, please put here your example of why MAX-$f$ failes. I guess it also applies to Random-$f$?]]
+ When using Max-$f$, however, expanding a goal $g_i$ does not guarantee
+ that the optimal solution to $g_i$ has been found. As a counter-example, consider 
+ the graph in Figure~\ref{}.
+ [[TODO: EXAMPLE]]
+ 
+ To guarantee optimality while still using Max-$f$, ....
+ [[TODO: Add sufficient condition]]
 
 \subsection{Runtime Analysis}
 % Analysis
