@@ -606,8 +606,8 @@ ISSN \@issn, IOS Press. All rights reserved}
 %
 % *********** MATH
 %
-\def\tfrac#1#2{{\textstyle\frac{#1}{#2}}}
-\def\dfrac#1#2{{\displaystyle\frac{#1}{#2}}}
+%\def\tfrac#1#2{{\textstyle\frac{#1}{#2}}}
+%\def\dfrac#1#2{{\displaystyle\frac{#1}{#2}}}
 %
 \if@secthm
  \@addtoreset{thm}{section}
