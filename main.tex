@@ -1,7 +1,10 @@
 \documentclass{aicom2e}
+\usepackage{amsmath}
 \usepackage[algo2e,ruled,vlined,linesnumbered]{algorithm2e}
 \usepackage[active]{srcltx}
-\usepackage{amsthm, amssymb,amsfonts}
+
+
+%\usepackage{amsthm, amssymb,amsfonts}
 \usepackage{graphicx}
 \usepackage{epsfig}
 \usepackage{latexsym}
@@ -22,11 +25,12 @@
 
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
 \newcommand{\kgs}{$k$-goal search}
 \newcommand{\astar}{A$^*$}
 \newcommand{\tuple}[1]{\ensuremath{\left \langle #1 \right \rangle }}
 \newcommand{\open}{\textsc{Open}}
-\newenvironment{proof}{\noindent{\bf Proof:~~}}{\qed}
+%\newenvironment{proof}{\noindent{\bf Proof:~~}}{\qed}
 
 \begin{document}
 \begin{frontmatter}                           % The preamble begins here.
@@ -142,14 +146,14 @@ i.e,. which node to choose from \open{} in every iteration when solving the \kgs
 
 We discuss next the following two options. 
 \begin{itemize}
- \item {\bf Min-$f$.} $F(n)=\min_{i\in [1,k]}f_i(n)$. 
- \item {\bf Max-$f$.} $F(n)=\max_{i\in [1,k]}f_i(n)$. 
+ \item {\bf Min-$f$.} $F_{min}(n)=\min_{i\in [1,k]}f_i(n)$. 
+ \item {\bf Max-$f$.} $F_{max}(n)=\max_{i\in [1,k]}f_i(n)$. 
  %\item {\bf Random-$f$.} $F(n)=ChooseRandom(f_1(n),\ldots,f_k(n))$. 
 \end{itemize}
 
 \begin{theorem}[Min-$f$ is admissible]
 Using an admissible heuristic, 
-When using an admissible heursitic and running a BFS that uses Min-$f$ as an evaluation function,
+When using an admissible heursitic and running a BFS that uses $F_{min}$ as an evaluation function,
 then when each goal $g_i$ is expanded for the firts time it is guaranteed that the lowest-cost path to $g_i$ has been found. 
 \label{the:min-f}
 \end{theorem}
@@ -157,13 +161,81 @@ then when each goal $g_i$ is expanded for the firts time it is guaranteed that t
  TODO
  \end{proof}
  
+ \begin{figure}
+ \includegraphics[width=\columnwidth]{max-bad_cropped.pdf}      
+ \caption{An example of where using Max-$f$ returns a non-optimal solution. In this example, 
+ using Max-$f$ will results in the following expansion order: $S$, $B$, $G_1$. 
+ Thus, when $G_1$ is expanded, the best path known to it costs 25, while a 
+ better path to it goes through $A$ and costs only 10.}
+ \label{fig:max-bad}
+ \end{figure}
+ 
  When using Max-$f$, however, expanding a goal $g_i$ does not guarantee
  that the optimal solution to $g_i$ has been found. As a counter-example, consider 
- the graph in Figure~\ref{}.
- [[TODO: EXAMPLE]]
+ the graph in Figure~\ref{fig:max-bad}.
+ In this example, using Max-$f$ will result in the following expansion order: $S$, $B$, and then $G_1$. 
+ At this stage, we expanded one of the goals -- $G_1$ -- while the best path found so far to it goes through $B$ and costs 40. However, a better path to it is through $A$, which costs only 10.
  
- To guarantee optimality while still using Max-$f$, ....
- [[TODO: Add sufficient condition]]
+ 
+ Of course, one may still use Max-$f$ as an anytime algorithm continuing the search and looking for better path to the previoulsy expanded goals. 
+ 
+ [[TODO: What is a good stopping condition for this option?]]
+ 
+ 
+ 
+ The observant reader may have noticed that the heuristic function in the example in Figure~\ref{fig:max-bad} is inconsistent: $h_2(A)=50$ while its child, $G_1$, which is connected to it via an edge of cost 5, has $h_2(G_1)=20$. If $h$ was consistent the $h_2(A)-c(A,G_1)\leq h_2(G_1)$, where e$c(A,G_1)$ is the cost of the edge between $A$ and $G_1$. This leads to the following theorem.
+ 
+ 
+\begin{theorem}[Max-$f$ is admissible if $h$ is consistent]
+If $G$ is undirected and $h$ is admissible and consistent, 
+then when running a BFS that uses Max-$f$ as an evaluation function,
+it holds that whenever a goal is expanded then the lowest-cost path to it has been found. 
+\label{the:max-f}
+\end{theorem}
+ \begin{proof}
+ Assume by negation that Theorem~\ref{the:max-f} is not correct. This means
+ that there is a case where a goal $G_i$ is expanded while $g(G_i)$ is not optimal. 
+ Since we are running a BFS, this means that there exists a node $n\in OPEN$ that
+ in the optimal path to $G_i$ and for which $g(n)=g^*(n)$ and 
+ \begin{equation}
+     g(n)+h_i^*(n) < g(G_i)
+    \label{eq:not-optimal}
+ \end{equation}
+ 
+ Now, since $G_i$ was chosen for expansion and not $n$, it holds that 
+\[                F_{max}(n)                     > F_{max}(G_i) \] 
+
+ \[ \rightarrow    g(n)+\max_j h_j(n)              > g(G_i) \max_j' h_{j'}(G_i) \]
+ 
+ \[ \rightarrow \exists l   g(n)+h_l(n)            > g(G_i)+h_l(G_i) \]
+ 
+ \[ \rightarrow \exists l   g(n)+h_l(n)-h_l(G_i)   > g(G_i) \]
+ 
+ 
+ \[ \rightarrow \exists l   g(n)+h_l(n)-h_l(G_i)   > g(n)+h^*_i(n) ~~~ (\ref{eq:not-optimal})\]
+ 
+\[ \rightarrow \exists l   h_l(n)-h_l(G_i)   > h^*_i(n) \]
+
+\[ \rightarrow \exists l   h_l(n)   > h^*_i(n)+h_l(G_i) \]
+
+
+\begin{align}
+TEST & t 
+\end{align}
+
+ \begin{equation}
+     \exists l   h_l(n)   > h^*_i(n)+h_l(G_i)
+    \label{eq:triangle-violated}
+ \end{equation}
+
+Observe that $h^*_i(n)$ is exactly the lowest cost path from $i$ to $G_i$. 
+Since $G$ is undirected, then it is also equal to the lowest-cost path from $G_i$ 
+to $n$. Thus, Equation~\ref{eq:triangle-violated} directly contradicts the assumption
+that $h$ is consistent: it shows that $h^*_i(n)+h_l(G_i)$ is a better heuristic 
+to the path from $n$ to $G_l$ than $h_l(n)$. Thus, if the heurisic is consistent
+then when a goal is expanded then we have the optimal path to it. 
+ \end{proof} 
+
 
 \subsection{Runtime Analysis}
 % Analysis
