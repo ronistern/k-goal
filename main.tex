@@ -231,8 +231,7 @@ The last line above exactly contradicts Equation~\ref{eq:proof-1}.
  When using Max-$f$, however, expanding a goal $g_i$ does not guarantee
  that the optimal solution to $g_i$ has been found. As a counter-example, consider 
  the graph in Figure~\ref{fig:max-bad}.
- In this example, using Max-$f$ will result in the following expansion order: $S$, $B$, and then $G_1$. 
- At this stage, we expanded one of the goals -- $G_1$ -- while the best path found so far to it goes through $B$ and costs 40. However, a better path to it is through $A$, which costs only 10.
+ In this example, using Max-$f$ will result in the following expansion order: $S$, $B$, and then $G_1$. At this stage, we expanded one of the goals -- $G_1$ -- while the best path found so far to it goes through $B$ and costs 40. However, a better path to it is through $A$, which costs only 10.
  
  
  Of course, one may still use Max-$f$ as an anytime algorithm. 
@@ -241,10 +240,15 @@ The last line above exactly contradicts Equation~\ref{eq:proof-1}.
  [[Roni: What is a good stopping condition for this option?]]
  %Concretely, we continued to compute the heuristic for all goals even after they were expanded, thus continuing to guide the search to look for better path continuing the search and looking for better path to the previously expanded goals. 
  
- 
- 
- 
- The observant reader may have noticed that the heuristic function in the example in Figure~\ref{fig:max-bad} is inconsistent: $h_2(A)=50$ while its child, $G_1$, which is connected to it via an edge of cost 5, has $h_2(G_1)=20$. If $h$ was consistent the $h_2(A)-c(A,G_1)\leq h_2(G_1)$, where e$c(A,G_1)$ is the cost of the edge between $A$ and $G_1$. This leads to the following theorem.
+ \subsubsection{Max-$f$ and Consistency}
+ Interestingly, the inadmissibility of Max-$f$ is related to the {\em inconsistency} of the used heuristic. 
+  \begin{definition}[Inconsistent Heuristic]
+ A heuristic $h$ is inconsistent if there exists a pair of states $x$ and $y$ such that
+ \[ h(x)>c(x,y)+h(y) \]
+ where $c(n,c)$ is the least cost path from $x$ to $y$
+ \label{def:inconsistent}
+ \end{definition}
+ The observant reader may have noticed that the heuristic function in the example in Figure~\ref{fig:max-bad} is indeed inconsistent: $h_2(A)=50$ while its child, $G_1$, which is connected to it via an edge of cost 5, has $h_2(G_1)=20$. If $h$ was consistent the $h_2(A)-c(A,G_1)\leq h_2(G_1)$, where e$c(A,G_1)$ is the cost of the edge between $A$ and $G_1$. 
  
  
 \begin{theorem}[Max-$f$ is admissible if $h$ is consistent]
@@ -255,37 +259,25 @@ it holds that whenever a goal is expanded then the lowest-cost path to it has be
 \end{theorem}
  \begin{proof}
  Assume by negation that Theorem~\ref{the:max-f} is not correct. This means
- that there is a case where a goal $G_i$ is expanded while $g(G_i)$ is not optimal. 
- Since we are running a BFS, this means that there exists a node $n\in OPEN$ that
- in the optimal path to $G_i$ and for which $g(n)=g^*(n)$ and 
+ that there is a case where a goal $G_i$ is expanded while $g(G_i)$ is not optimal. Since we are running a BFS, this means that there exists a node $n\in OPEN$ that is on the optimal path to $G_i$ and for which $g(n)=g^*(n)$. Formally, 
  \begin{equation}
-     g(n)+h_i^*(n) < g(G_i)
+     g(n)+h_i^*(n) = g^*(n)+h_i^*(n) < g(G_i)
     \label{eq:not-optimal}
  \end{equation}
  
  Now, since $G_i$ was chosen for expansion and not $n$, it holds that 
 \begin{align}
-F_{max}(n)  > & F_{max}(G_i) \\
-\Rightarrow    g(n)+\max_j h_j(n)              > & g(G_i) \max_j' h_{j'}(G_i)\\
-\Rightarrow \exists l   g(n)+h_l(n)-h_l(G_i)   >& g(G_i)\\
-\Rightarrow \exists l   g(n)+h_l(n)-h_l(G_i)   >& g(n)+h^*_i(n) ~~~ (\ref{eq:not-optimal})\\
-\Rightarrow \exists l   h_l(n)-h_l(G_i)   >& h^*_i(n)\\
-\Rightarrow \exists l   h_l(n)-h_l(G_i)   >& h^*_i(n)\\
-\Rightarrow \exists l   h_l(n)   > & h^*_i(n)+h_l(G_i) 
+F_{max}(n)  & > F_{max}(G_i) \\
+\Rightarrow    g(n)+\max_j h_j(n)              & >  g(G_i) + \max_{j'} h_{j'}(G_i)\\
+\Rightarrow \exists l:   g(n)+h_l(n)-h_l(G_i)  & > g(G_i)\\
+\Rightarrow g(n)+h_l(n)-h_l(G_i)  & > g(n)+h^*_i(n) ~~~ (\ref{eq:not-optimal})\\
+\Rightarrow h_l(n)-h_l(G_i)  & > h^*_i(n)\\
+\Rightarrow h_l(n)   & > h^*_i(n)+h_l(G_i)\\  
+\Rightarrow h_l(n)   & > c(n,G_i) +h_l(G_i) \label{eq:h-inconsistent}      
 \end{align}
-
- \begin{equation}
-     \exists l   h_l(n)   > h^*_i(n)+h_l(G_i)
-    \label{eq:triangle-violated}
- \end{equation}
-
-Observe that $h^*_i(n)$ is exactly the lowest cost path from $i$ to $G_i$. 
-Since $G$ is undirected, then it is also equal to the lowest-cost path from $G_i$ 
-to $n$. Thus, Equation~\ref{eq:triangle-violated} directly contradicts the assumption
-that $h$ is consistent: it shows that $h^*_i(n)+h_l(G_i)$ is a better heuristic 
-to the path from $n$ to $G_l$ than $h_l(n)$. Thus, if the heurisic is consistent
-then when a goal is expanded then we have the optimal path to it. 
- \end{proof} 
+Thus, Equation~\ref{h-inconsistent} directly contradicts the assumption
+that $h$ is consistent (see Definition~\ref{def:inconsistent}. 
+\end{proof} 
 
 
 \section{Runtime Analysis}
