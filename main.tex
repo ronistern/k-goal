@@ -265,18 +265,25 @@ it holds that whenever a goal is expanded then the lowest-cost path to it has be
     \label{eq:not-optimal}
  \end{equation}
  
- Now, since $G_i$ was chosen for expansion and not $n$, it holds that 
+ Now, since $G_i$ was chosen for expansion and not $n$, it holds that $F_{max}(n)  > F_{max}(G_i)$. Following the definition of $F_{max}$, we have that
+ \begin{equation}
+     g(n)+\max_j h_j(n) > g(G_i) + \max_{j'} h_{j'}(G_i)
+ \end{equation}
+ So, there exists a goal $G_l$ for which $f_l(n)$ is larger than 
+ all the $f_j$ values of $G_j$, for every $j\in [1,k]$. In particular, 
+ $f_l(n)>f_l(G_i)$, and consequently:
+ \begin{align}
+     g(G_i)+h_l(G_i) < & g(n)+h_l(n) \\
+     g(G_i) < & g(n)+h_l(n) - h_l(G_i) 
+ \end{align} 
+Now, since we assumed that we have not found the optimal path to $G_i$ (Eq.~ \ref{eq:not-optimal}) then:
 \begin{align}
-F_{max}(n)  & > F_{max}(G_i) \\
-\Rightarrow    g(n)+\max_j h_j(n)              & >  g(G_i) + \max_{j'} h_{j'}(G_i)\\
-\Rightarrow \exists l:   g(n)+h_l(n)-h_l(G_i)  & > g(G_i)\\
-\Rightarrow g(n)+h_l(n)-h_l(G_i)  & > g(n)+h^*_i(n) ~~~ (\ref{eq:not-optimal})\\
-\Rightarrow h_l(n)-h_l(G_i)  & > h^*_i(n)\\
-\Rightarrow h_l(n)   & > h^*_i(n)+h_l(G_i)\\  
-\Rightarrow h_l(n)   & > c(n,G_i) +h_l(G_i) \label{eq:h-inconsistent}      
+\Rightarrow g(n)+h^*_i(n)  & < g(n)+h_l(n) - h_l(G_i)\\
+\Rightarrow h^*_i(n)  & < h_l(n) - h_l(G_i)\\
+\Rightarrow c(n,G_i) + h_l(G_i) & < h_l(n) \label{eq:h-inconsistent} 
 \end{align}
-Thus, Equation~\ref{h-inconsistent} directly contradicts the assumption
-that $h$ is consistent (see Definition~\ref{def:inconsistent}. 
+Thus, Equation~\ref{eq:h-inconsistent} directly contradicts the assumption
+that $h$ is consistent (see Definition~\ref{def:inconsistent}). 
 \end{proof} 
 
 
