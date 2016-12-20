@@ -69,6 +69,16 @@ artificial intelligence\sep AI\sep Heuristic Search
 \section*{Introduction}
 
 
+The shortest path problem (SSP) in a graph is the problem of finding the lowest cost path in a graph from one vertex -- denoted the {\em start} vertex -- to another vertex -- denoted the {\em goal} vertex. 
+SSP is a well-studied problem and many algorithms have been proposed for solving it. 
+
+Now, imaging $k$ SSP problems, such that all the problems share the same start vertex. 
+Solving this set of SSP problems is called the $k$-goal problem. 
+A trivial solution to \kgs\ is to run a SSP solver $k$ times. Alternatively, 
+we can construct a $k$-dimensional SSP problem, and try to solve all the $k$ SSP problems concurrently. 
+In this work we study the interplay between these two extreme approaches and
+study how heuristics can be used correctly to solve \kgs. 
+
 \section{Background and Problem Definition}
 
 %In this section, we formally define the $k$-goal search problem.
