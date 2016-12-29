@@ -34,6 +34,9 @@
 \newcommand{\astar}{A$^*$}
 \newcommand{\tuple}[1]{\ensuremath{\left \langle #1 \right \rangle }}
 \newcommand{\open}{\textsc{Open}}
+\newcommand{\closed}{\textsc{Closed}}
+\DeclareMathOperator*{\argmin}{\arg\!\min}
+\newcommand{\roni}[1]{\textbf{[RS:#1]}}
 %\newenvironment{proof}{\noindent{\bf Proof:~~}}{\qed}
 
 \begin{document}
@@ -79,58 +82,188 @@ we can construct a $k$-dimensional SSP problem, and try to solve all the $k$ SSP
 In this work we study the interplay between these two extreme approaches and
 study how heuristics can be used correctly to solve \kgs. 
 
+
+\roni{TODO: SOME RELATED WORK?}
+
 \section{Background and Problem Definition}
 
 %In this section, we formally define the $k$-goal search problem.
-In this section we provide relevant background and formally define the \kgs\ problem. 
-Let $G=(V,E,w)$ be a weighted graph, where $w:E\rightarrow \mathbb{R}^+$ be the weight function, i.e., for an edge $e\in E$ the value $w(e)$ is its weight. 
-The shortest path problem (SPP) is the problem of finding the lowest cost path in $G$ from a given start vertex $s$ to a goal vertex $g$. 
 
-SPP has been well-studied in the literature. A popular framework for solving SPP is Best-first search (BFS). There are many path-finding algorithms that are based on BFS, including classical SPP algorithms like Dijkstra's algorithm~\cite{} and \astar{}. 
-    While BFS has many variants, Algorithm~\ref{alg:bfs} provides a high-level pseudo-code for BFS. 
+% Graphs, costs, SSP
+Let $G=(V,E,w)$ be a weighted graph, where $w:E\rightarrow \mathbb{R}^+$ is a function that assigns a positive real value for every edge. This value is referred to as the {\em cost} of the edge and the cost of a path in a graph is  the sum the edge costs along it. 
+In the Artificial Intelligence literature, graphs are often used to represent state spaces, 
+where the graph vertices represent possible states of the world, the out-going edges of a vertex represent possible actions that an agent can be performed in the corresponding state, and the cost of that edge represents to the cost of the corresponding action. 
+Thus, throughout this paper we will use the term {\em state} and {\em actions} instead of vertices and edges, and use the term {\em applying an action} instead of traversing an edge. Note that a path in a graph corresponds to an applicable sequence of actions. 
+
+\begin{definition}[The Shortest Path Problem (SPP)]
+A shortest path problem (SPP) is defined by a tuple $\tuple{G,s, g}$, 
+where $s$ and $g$ are states in $G$ and the problem is to find the lowest cost path in $G$ from $s$ to $g$. 
+\end{definition}
+
+\subsection{The \astar{} Algorithm}
 
 
-[[TODO: Background on BFS and on \astar{}. Talking also about admissible heuristics]]
 
 
 \begin{algorithm2e}[t!]
+	\small
 	\KwIn{Start state $s$, Goal state $g$)}
-    \open{}~$\gets\{s\}$; \\
-    \While {\open{} $\neq \emptyset$} {
-        $best \gets \texttt{ChooseNode}(\open{})$ \nllabel{line:open:chooseNode}\\
-        Remove $best$ from \open{}\\
-                \lIf {$best$ is a goal}{\Return $best$}
-        \For{$n \in neighbors(best)$}{
-            Add $n$ to \open{}\\
-        }
-    } 
-\caption{Best-first-search}
-\label{alg:bfs}
+	$g(s)\gets 0$; \open{}~$\gets\emptyset$; \closed{}~$\gets \emptyset$\\
+	Add $s$ to \open{} with $f(s)=g(s)+h(s)$\\
+	\While {\open{} $\neq \emptyset$} {
+		$n \gets \argmin\limits_{n\in\open{}} f(n)$ \nllabel{line:open:chooseNode}\\
+		Move $n$ from \open{} to \closed{}\\
+		\lIf {$n$ is the goal state}{\Return $n$}
+		\For{every action $a$ applicable at state $n$ \nllabel{line:nextNeighbor}}{
+			$c \gets $ generate a state by applying $a$ to $n$ \nllabel{line:astar:generate-start}\\			
+			
+			% Duplicate detection
+			\If{$c$ in $\open{}\cup \closed{}$ \nllabel{line:dd-start}}{
+				\If{$g(c) \leq g(n)+w((n,c))$}{
+					Continue (goto line~\ref{line:nextNeighbor})
+				}
+				Remove $n$ from \open{} and \closed{}  \nllabel{line:dd-end}\\
+			}
+			% Update n's g and f values
+			$g(c)\gets g(n)+w((n,c))$ \nllabel{line:compute-f}\\ 							
+			Add $c$ to \open{} with $f(c)=g(c)+h(c)$  \nllabel{line:astar:generate-end}\\
+		}
+	}
+	\Return No solution exists\\ 
+	\caption{\astar{}}
+	\label{alg:astar}
 \end{algorithm2e}
 
 
 
+% A* for single agent search
+SPP has been well-studied in the literature. \astar{}~\cite{hartNR68Astar} is a popular 
+heuristic search algorithm for solving SPP. For completeness, we provide below a short description of the \astar{} algorithm, and Algorithm~\ref{alg:astar} shows its pseudo code. 
+\astar{} is maintains two lists of states: \open{} and \closed{}. 
+Initially, \closed{} is empty and \open{} contains only the start state. 
+Every node that is added to \open{} is associated with a $g$ value and an $f$ value. 
+The $g$ value of a node $n$, denoted $g(n)$, is the cost of the lowest cost path found so far from the start state $s$ to $n$, where $g(s)$ is set to zero. 
+The $f$ value of $n$, denoted $f(n)$ is the sum of $g(n)$ and a heuristic estimate of the cost of the lowest cost path from $n$ to the goal state $g$. 
+This heuristic estimate is denoted by $h(n)$, and there is an abundance of prior work in the literature on how to develop efficient heuristics. 
 
-The $\texttt{ChooseNode}$ function (line~\ref{line:open:chooseNode} in Alg.~\ref{alg:bfs}) is often implemented by defining a node evaluation function $F$, such that 
-the chosen node is the one with the minimal $F$ value. For example, Dijsktra's algorithm is a BFS in which $F=g$, and \astar{} is a BFS in which $F=f=g+h$. 
+
+In every iteration of \astar{}, the state with the lowest $f$ value in \open{} is moved from \open{} to \closed{}. 
+If that node is a goal, the search halts. Otherwise, the state is {\em expanded}.  
+Expanding a state $n$ means generating every state that can be reached by applying a single action at state $n$. 
+Then, the $g$ and $f$ values of every generated state $c$ are computed based on the $g$ value of its parent, the cost of the action used to generate $c$, and the heuristic estimate $h(c)$. Finally, the generated nodes are added to \open{} with their $f$ values, to be considered for expansion in future iterations. Since the searched graph may not be a tree, multiple paths to the same state may be explored, and \astar{} keeps track of only the best (lowest cost) path it finds to every generated state (lines~\ref{line:dd-start}-\ref{line:dd-end}).  
+
+
+\roni{TODO: Maybe add more line numbers to the text?}
+
+% A* properties and admissible heursitics
+\astar{} has several important properties. First, if the heuristic used is {\em admissible}, i.e., it does not over-estimate the cost of the lowest cost path to the goal, then \astar{} is guaranteed to solve SPP, i.e., to return a lowest cost path from $s$ to $g$.\footnote{In fact, it is sufficient that the heuristic will be admissible only on states that are on a single lowest-cost path for \astar{} to guarantee optimality.} 
+Second, if the heuristic is {\em consistent} then \astar{} is guaranteed to expand every state at most once. 
+%when a state $n$ is expanded it is guaranteed that the lowest cost path from $s$ to $n$ has been found, and thus $g(n)$ is the cost lowest cost path from $s$ to $n$. 
+\begin{definition}[Consistent Heuristic]
+	A heuristic $h$ is consistent if for every pair of states $n$ and $c$ such that expanding $n$ generates $c$ 
+	it holds that there exists a pair of states $x$ and $y$ such that
+	\[ h(n)\leq w((n,c))+h(c) \]
+	\label{def:consistent}
+\end{definition}
+%The important implication of a consistent heuristic is that \astar{} with a consistent heuristic is guaranteed to expand every state at most once. 
+Third, under some conditions it can be shown that, up to tie-breaking between states with equal $f$ values, \astar{} will only expand the minimal set of states required to find an optimal solution~\cite{dechter1985generalizedBestFirst}. 
+A more recent generalization of \astar{} also provides a similar guarantee with respect to the number of states generated~\cite{Goldenberg}. This type of guarantees, often referred to as the {\em optimally effective} property of \astar{}, is  important because in many cases the runtime of the algorithm is correlated with the number of states expanded/generated. 
+Thus, guaranteeing that \astar{} expands the minimal number of states provides some sort of optimality guarantee for \astar{}'s efficiency compared to equally informed algorithms. 
 
 
 
-
-The $k$-goal search problem can be viewed as a generalization of SPP, and is defined as follows. 
+\subsection{The $k$-Goal Problem}
+In this paper we focus on the $k$-goal search problem, which can be viewed as a generalization of SPP. 
 
 \begin{definition}[$k$-goal search]
-Given a weighted graph $G$, a start vertex $s\in V$, and $k$ goal vertices 
-$g_1, g_2,\ldots g_k\in V$, the task is to find $k$ paths $p_1,\ldots p_k$ 
-such that for every $i\in [1,k]$ it holds that $p_i$ is a lowest-cost path from $s$ to $g_i$. 
+	A \kgs\ problem is defined by a tuple $\tuple{G,s, g_1, g_2, \ldots, g_k}$, 
+	where $s$ and $g_1, g_2, \ldots, g_k$ are states in $G$ and the problem is to find 
+	$k$ paths $p_1,\ldots p_k$ such that for every $i\in [1,k]$ it holds that $p_i$ is a lowest-cost path from $s$ to $g_i$. 
 \end{definition}
 
+
 % k searches independentaly
-Clearly, SPP is a special case of \kgs\ with $k=1$. A trivial solution to the \kgs\ problem is to consider it as $k$ independent shortest path problem, and use a SPP algorithm such as Dijkstra's algorithm~\cite{} or \astar{}~\cite{}. 
-In this work we explore different approaches for solving the \kgs\ problem that try to reuse information between the $k$ tasks. 
+Clearly, SPP is a special case of \kgs\ with $k=1$. A trivial solution to the \kgs\ problem is to consider it as $k$ independent SPPs and use a SPP algorithm such as \astar{} to solve these problems. In the next section we present this approach and analyze its complexity. 
+In later sections we explore a different approach to solving the \kgs\ problem that considers \kgs{} as a single search problem, in an effort to re-use information between the $k$ tasks. 
 
 
-\section{One BFS for $k$-Goal Search}
+
+\section{$k$ Searches for One Goal}
+
+\begin{algorithm2e}[t!]
+	\small
+	\KwIn{Start state $s$, Goal states $g_1,\ldots g_k$)}
+	\For{$i$=1 to $k$}{
+		$p_i\gets$ \astar{}($s$,$g_i$)\\
+	}
+	\Return $p_1,\ldots p_k$\\	
+	\caption{Solving \kgs{} with $k$ \astar{}s}
+	\label{alg:k-searches}
+\end{algorithm2e}
+
+Algorithm~\ref{alg:k-searches} outlines the trivial approach for solving \kgs{}: running \astar{} $k$ times, where every run solves the SPP for one of the $k$ goals. The resulting $k$ paths are returned as a solution to the \kgs{} problem. 
+To analyze the effectiveness of approach, we use the notions of {\em necessary} states and {surplus} states~\cite{goldenberg}. 
+\roni{Meir and Ariel: who used this term before us?}
+
+\begin{definition}[Surplus States and Necessary States]
+	Let $\Pi$ be a SPP defined by the tuple $\tuple{G,s,g}$, and let $opt_\Pi$ denote the cost of a solution to $\Pi$. 
+	A state $n$ is called a {\bf necessary} state with respect to $\Pi$ if $f(n)<opt_\Pi$. 
+	A state $n$ is called a {\bf surplus} state with respect to $\Pi$ if $f(n)>opt_\Pi$. 
+\end{definition}
+Without any additional knowledge of the graph $G$, one needs to expand every necessary state in order to solve a given SPP, 
+and one can solve a given SPP without expanding any surplus state. \roni{Meir/Ariel, what would be a good reference to put here? Dechter and Pearl? it is important to be accurate here}
+\astar{} is guaranteed to expand all necessary nodes and not a single surplus node. Consequently, 
+using Algorithm~\ref{alg:k-searches} to solve a \kgs{} problem will end up expanding all the necessary states 
+for finding the required $k$ shortests path, without expanding any surplus state. 
+In plainer words, it seems that Algorithm~\ref{alg:k-searches} is ``optimally effective'' for \kgs{}, 
+expanding exactly the set of needs one must expand in order to solve the problem, up to tie-breaking between states with the same $f$ value. 
+
+
+This conclusion, however, is not accurate, as it overlooks two potential sources for improvement:
+\begin{itemize}
+	\item {\bf Learning from experience.} When solving one SPP problem, e.g., for goal $g_1$, one gains additional knowledge of the searched graph, which may be used when solving the subsequent SPPs for the other goals.
+	\item {\bf Avoiding duplication.} The same state can be generated and expanded in multiple SPPs. For example, using Algorithm~\ref{alg:k-searches} will end up generating the children of the start state at least $k$ times. This introduces redundancy to the search process that may be avoided.  
+\end{itemize}
+The first source of improvement is closely related to the literature on incremental search and to moving-target search algorithms. Thus, we focus on this work on the latter source of improvement -- avoiding redundancy in the search process. 
+\roni{Meir and Ariel: the above paragraph is a potential mine (as Ariel likes to call them). But on the other hand, I think it is correct. Let me know what you think, and also, help me in adding appropriate references.}
+Next, we analyze these redundancies. 
+
+\subsection{Redundancies in the $k$ Searches Approach}
+
+To analyze the redundant operations performed by the $k$ search approach, we first describe the operations performed by \astar{} whenever a state is generated (lines~\ref{line:astar:generate-start}-\ref{line:astar:generate-end} in Algorithm~\ref{alg:astar}):
+\begin{enumerate}
+\item {\bf Generation}  (line~\ref{line:astar:generate-start}). This means computing the generated state by applying 
+an action to the expanded state. This step usually involves setting up some data structure that represents the generated state. If the action generating the state is not too complicate, the complexity of this step is linear in the size of the state. 
+\item {\bf Duplicate detection}  (lines~\ref{line:dd-start}-\ref{line:dd-end}). This means performing a lookup in \open{} and \closed{} to see if the generated state was already generated, and if so, whether the current path to it is better than the one previously found. The lookup in \open{} and \closed{} is often implemented by storing all the nodes that were generated in the past in some hash table and performing an $O(1)$ hash table lookup. We denote the computational cost of this step as $C_{dd}$. 
+\item {\bf Heuristic computation}  (line~\ref{line:compute-f}). This means computing the $h$ value of the generated node. Heuristics vary widely in their computational cost, where some heuristics require constant time to compute while more sophisticated heuristics may involve poly-time computations. We denote the computational cost of this step as $C_{h}$. 
+\item {\bf Insertion into \open{}}  (line~\ref{line:astar:generate-end}). This means adding a state to \open{} with an associated $f$ value. \open{} are often implemented as a Binary heap or priority queue sorted according to $f$ values, so that extracting the state with lowest $f$ value is very fast. Thus, inserting a state to \open{} may take time that is logarithmic in the size of \open{}. We denote the computational cost of this step as $C_{add}$.  
+\end{enumerate}
+Each of these operations incur some computational cost. Let $C_{gen}, C_{dd}, C_{h},$ and $C_{add}$ denote the average computation cost 
+of the above four operations, generation, duplicate detection, heuristic computation, and insertion into \open{}, respectively, 
+and let $Gen(g_i)$ denote the set of nodes generated by \astar{} when it is used to solve SPP for goal $g_i$.  
+Clearly, the $k$ searches approach incurs at least $\sum_{i=0}^k C_{gen}+C_{dd}+C_{h}+C_{add}$ in terms of computation cost, 
+even if when the states generated by these searches are almost the same. 
+
+\begin{figure}
+	\includegraphics[width=\columnwidth]{k-search-bad_cropped}
+	\caption{An example where the $k$ search approach is inefficient.}
+	\label{fig:k-search-bad}
+\end{figure}
+An extreme example of this inefficiency is depicted in Figure~\ref{fig:k-search-bad}. The searched graph is a simple line, 
+where $g_1$ is adjacent to $s$, $g_2$ is adjacent to $g_1$, and so on. In this case the $k$ searches approach would generate
+$1+2+3+\cdots+k=\frac{k(k-1)}{2}$ while it is easy to see that generating $k$ states would be sufficient to solve the \kgs{} for this case. 
+
+
+% Some costs can be saved
+More generally, consider the costs incurred when generating a state $n$ for more than one goal. 
+The costs incurred for heuristic computation ($C_{h}$) may be unavoidable. This is because to prove that a path of cost $X$ to a goal $g_i$ is optimal, one needs to expand all the necessary nodes. 
+This is needed to verify that all paths of costs smaller than $X$ have been considered. Since the $f$ value of a state may be different when searching for different goals, this means that a state may be necessary for one search and not necessary for the other. Thus, the search must verify that $n$ is necessary for each goal independently, incurring a computational cost of $C_{h}$ per goal. 
+
+However, when a state is generated by more than one search there is potential for saving some of the computational costs incurred during its generation. In particular, by generating such states only once, one may save the costs incurred for node generation, duplicate detection, and insertion to \open{} ($C_{gen}, C_{dd},$ and $C_{add}$). In the next section we propose a method for doing so. 
+
+
+
+\section{One Search for $k$ Goals}
 
 In this section we explore how to find solve the \kgs{} using a single BFS. This is motivated by the understanding that performing $k$ different searches may explore the same node multiple times. The main modifications done to the classical BFS are:
 \begin{itemize}
