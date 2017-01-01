@@ -32,6 +32,7 @@
 
 
 \newcommand{\astar}{A$^*$}
+\newcommand{\kastar}{kA$^*$}
 \newcommand{\tuple}[1]{\ensuremath{\left \langle #1 \right \rangle }}
 \newcommand{\open}{\textsc{Open}}
 \newcommand{\closed}{\textsc{Closed}}
@@ -49,7 +50,7 @@
 \maketitle
 %
 \author[]{Meir Goldenberg}
-\address{Lev Academic Center\\ Jerusalem, Israel\\
+\address{The Jerusalem College of Technology\\ Jerusalem, Israel\\
 	E-mail: mgoldenbe@gmail.com}
 \author[]{Roni Stern}
 \address{Ben Gurion University of the Negev\\ Be'er Sheva, Israel\\
@@ -75,7 +76,7 @@ artificial intelligence\sep AI\sep Heuristic Search
 The shortest path problem (SSP) in a graph is the problem of finding the lowest cost path in a graph from one vertex -- denoted the {\em start} vertex -- to another vertex -- denoted the {\em goal} vertex. 
 SSP is a well-studied problem and many algorithms have been proposed for solving it. 
 
-Now, imaging $k$ SSP problems, such that all the problems share the same start vertex. 
+Now, imagine $k$ SSP problems, such that all the problems share the same start vertex. 
 Solving this set of SSP problems is called the $k$-goal problem. 
 A trivial solution to \kgs\ is to run a SSP solver $k$ times. Alternatively, 
 we can construct a $k$-dimensional SSP problem, and try to solve all the $k$ SSP problems concurrently. 
@@ -90,10 +91,10 @@ study how heuristics can be used correctly to solve \kgs.
 %In this section, we formally define the $k$-goal search problem.
 
 % Graphs, costs, SSP
-Let $G=(V,E,w)$ be a weighted graph, where $w:E\rightarrow \mathbb{R}^+$ is a function that assigns a positive real value for every edge. This value is referred to as the {\em cost} of the edge and the cost of a path in a graph is  the sum the edge costs along it. 
+Let $G=(V,E,w)$ be a weighted graph, where $w:E\rightarrow \mathbb{R}^+$ is a function that assigns a non-negative real value for every edge. This value is referred to as the {\em cost} of the edge and the cost of a path in a graph is  the sum the edge costs along it. 
 In the Artificial Intelligence literature, graphs are often used to represent state spaces, 
-where the graph vertices represent possible states of the world, the out-going edges of a vertex represent possible actions that an agent can be performed in the corresponding state, and the cost of that edge represents to the cost of the corresponding action. 
-Thus, throughout this paper we will use the term {\em state} and {\em actions} instead of vertices and edges, and use the term {\em applying an action} instead of traversing an edge. Note that a path in a graph corresponds to an applicable sequence of actions. 
+where the graph vertices represent possible states of the world, the out-going edges of a vertex represent possible actions that an agent can perform in the corresponding state, and the cost of that edge represents the cost of the corresponding action. 
+Thus, throughout this paper we will use the terms {\em states} and {\em actions} instead of vertices and edges, respectively, and use the term {\em applying an action} instead of traversing an edge. Note that a path in a graph corresponds to an applicable sequence of actions. 
 
 \begin{definition}[The Shortest Path Problem (SPP)]
 A shortest path problem (SPP) is defined by a tuple $\tuple{G,s, g}$, 
@@ -138,36 +139,37 @@ where $s$ and $g$ are states in $G$ and the problem is to find the lowest cost p
 
 % A* for single agent search
 SPP has been well-studied in the literature. \astar{}~\cite{hartNR68Astar} is a popular 
-heuristic search algorithm for solving SPP. For completeness, we provide below a short description of the \astar{} algorithm, and Algorithm~\ref{alg:astar} shows its pseudo code. 
-\astar{} is maintains two lists of states: \open{} and \closed{}. 
+heuristic search algorithm for solving SPP. For completeness, we provide below a short description of the \astar{} algorithm (see Algorithm~\ref{alg:astar} for the pseudo code of \astar{}). 
+\astar{} maintains two lists of states: \open{} and \closed{}. 
 Initially, \closed{} is empty and \open{} contains only the start state. 
-Every node that is added to \open{} is associated with a $g$ value and an $f$ value. 
+Every state that is added to \open{} is associated with a $g$ value and an $f$ value. 
 The $g$ value of a node $n$, denoted $g(n)$, is the cost of the lowest cost path found so far from the start state $s$ to $n$, where $g(s)$ is set to zero. 
 The $f$ value of $n$, denoted $f(n)$ is the sum of $g(n)$ and a heuristic estimate of the cost of the lowest cost path from $n$ to the goal state $g$. 
-This heuristic estimate is denoted by $h(n)$, and there is an abundance of prior work in the literature on how to develop efficient heuristics. 
+This heuristic estimate is denoted by $h(n)$, and there is an abundance of prior work in the literature on how to develop effective heuristics. \roni{TODO: Add some refs here}
 
 
-In every iteration of \astar{}, the state with the lowest $f$ value in \open{} is moved from \open{} to \closed{}. 
+In every iteration of the classical \astar{} algorithm, the state with the lowest $f$ value in \open{} is moved from \open{} to \closed{}. 
 If that node is a goal, the search halts. Otherwise, the state is {\em expanded}.  
 Expanding a state $n$ means generating every state that can be reached by applying a single action at state $n$. 
 Then, the $g$ and $f$ values of every generated state $c$ are computed based on the $g$ value of its parent, the cost of the action used to generate $c$, and the heuristic estimate $h(c)$. Finally, the generated nodes are added to \open{} with their $f$ values, to be considered for expansion in future iterations. Since the searched graph may not be a tree, multiple paths to the same state may be explored, and \astar{} keeps track of only the best (lowest cost) path it finds to every generated state (lines~\ref{line:dd-start}-\ref{line:dd-end}).  
 
 
 \roni{TODO: Maybe add more line numbers to the text?}
+\roni{TODO: Add something on tie breaking}
 
 % A* properties and admissible heursitics
 \astar{} has several important properties. First, if the heuristic used is {\em admissible}, i.e., it does not over-estimate the cost of the lowest cost path to the goal, then \astar{} is guaranteed to solve SPP, i.e., to return a lowest cost path from $s$ to $g$.\footnote{In fact, it is sufficient that the heuristic will be admissible only on states that are on a single lowest-cost path for \astar{} to guarantee optimality.} 
-Second, if the heuristic is {\em consistent} then \astar{} is guaranteed to expand every state at most once. 
+Second, if the heuristic is {\em consistent} then \astar{} is guaranteed to never expand a state more than once. 
 %when a state $n$ is expanded it is guaranteed that the lowest cost path from $s$ to $n$ has been found, and thus $g(n)$ is the cost lowest cost path from $s$ to $n$. 
 \begin{definition}[Consistent Heuristic]
 	A heuristic $h$ is consistent if for every pair of states $n$ and $c$ such that expanding $n$ generates $c$ 
-	it holds that there exists a pair of states $x$ and $y$ such that
+	it holds that 
 	\[ h(n)\leq w((n,c))+h(c) \]
 	\label{def:consistent}
 \end{definition}
 %The important implication of a consistent heuristic is that \astar{} with a consistent heuristic is guaranteed to expand every state at most once. 
 Third, under some conditions it can be shown that, up to tie-breaking between states with equal $f$ values, \astar{} will only expand the minimal set of states required to find an optimal solution~\cite{dechter1985generalizedBestFirst}. 
-A more recent generalization of \astar{} also provides a similar guarantee with respect to the number of states generated~\cite{Goldenberg}. This type of guarantees, often referred to as the {\em optimally effective} property of \astar{}, is  important because in many cases the runtime of the algorithm is correlated with the number of states expanded/generated. 
+A recent generalization of \astar{} provides a similar guarantee with respect to the number of states generated as well~\cite{Goldenberg}. This type of guarantees, often referred to as the {\em optimally effective} property of \astar{}, is  important because in many cases the runtime of the algorithm is correlated with the number of states expanded/generated. 
 Thus, guaranteeing that \astar{} expands the minimal number of states provides some sort of optimality guarantee for \astar{}'s efficiency compared to equally informed algorithms. 
 
 
@@ -264,15 +266,15 @@ However, when a state is generated by more than one search there is potential fo
 
 
 \section{One Search for $k$ Goals}
-
-In this section we explore how to find solve the \kgs{} using a single BFS. This is motivated by the understanding that performing $k$ different searches may explore the same node multiple times. The main modifications done to the classical BFS are:
+The \kgs{} algorithm we propose in this section is a generalization of \astar{} to search for $k$ goals in parallel. 
+We call this version of \astar{} the \kastar{} algorithm. 
+The main differences between \astar{} and \kastar{} are:
 \begin{itemize}
-    \item {\bf Stopping condition.} When one of the goal vertices is expanded, the found path to that goal is returned to the user. However, the search does not halt until lowest-cost paths to all $k$ are found. Therefore, after a path to a goal is found the search continues, expanding the found goal vertex and inserting its children to \open . The search only halts after there is a path found for every goal. 
-    \item {\bf Tracking the relevant goals.} When searching for $k$ goals in a single BFS, we need to keep track of which goal has been solved, 
-    i.e., a path to it has been found, and which goals still need to be found. 
+    \item {\bf Stopping condition.} Unlike \astar{}, which halts when a goal is expanded, in \kastar{} the search does not halt until a lowest-cost path to each of the $k$ goals is found. 
+    \item {\bf Tracking the relevant goals.} In \kastar{} we keep track of the set of goals that were already solved, i.e., a lowest cost path to them has been found. 
+    This is done to avoid redundant heuristic computations, so when a state is generated we only compute the heuristics for goals that were not solved so far. 
     \item {\bf Node evaluation function.} When searching for a single lowest-cost path with \astar{}, the nodes are popped from \open{} 
-    according to their $f=g+h$ values. To extend BFS to solve the \kgs\ problem efficiently, 
-    we will associate nodes in \open{} with a value that considers the $h$-value for each of the $k$ goals. 
+    according to their $f=g+h$ values. In \kastar{}, we compute the $h$-value forand associate every node in \open{} with a value that considers the $h$-value for each of the $k$ goals. 
     Thus, when a node is generated then we compute the heuristic for each of the $k$ goals.
 \end{itemize}
 
