@@ -27,12 +27,15 @@
 \newtheorem{definition}{Definition}
 \newtheorem{lemma}{Lemma}
 \newtheorem{theorem}{Theorem}
+\newtheorem{observation}{Observation}
 \newcommand{\kgs}{$k$-goal search}
 \newcommand{\kgbfs}{$k$-goal best-first search}
 
 
 \newcommand{\astar}{A$^*$}
 \newcommand{\kastar}{kA$^*$}
+\newcommand{\minf}{Min-f}
+\newcommand{\maxf}{Max-f}
 \newcommand{\tuple}[1]{\ensuremath{\left \langle #1 \right \rangle }}
 \newcommand{\open}{\textsc{Open}}
 \newcommand{\closed}{\textsc{Closed}}
@@ -320,29 +323,27 @@ which in turn depends on how $F_n$ is computed. %)the {\tt ComputeF} function is
 
 
 \subsection{An Evaluation Function for \kastar{}}
-In regular \astar{} for a single goal, {\tt ComputeF} returns the $f=g+h$ value of a node. 
-In \kgs{}, however, there are $k$ heuristic values for each node $n$, $h_1(n),\ldots,h_k(n)$ and 
-thus each node has multiple  $f$ values, $f_1(n),\ldots,f_k(n)$, one per goal. We consider in this section the following two options for aggregating these $f$ values to a single $F_n$ value that will be used by \kastar{} to prioritize \open{}. 
-
+In \astar{} for a single goal, states are prioritized in \open{} according to the $f=g+h$ value of a node. 
+In contrast, a state in \kastar{} has $k$ heuristic values ($h_1(n),\ldots,h_k(n)$) and 
+consequently $k$ $f$ values ($f_1(n),\ldots,f_k(n)$) one per goal. Therefore, \kastar{} requires a node evaluation function that aggregates these $f$ values in some way. In Algorithm~\ref{alg:k-goal-bfs} this is encapsulated in the {\tt ComputeF} function. We refer to the value returned by this function as the state's $F$ value, and consider the following two options for computing it. 
 \begin{align}
-F_{min}(n)=&\min_{i\in [1,k]}f_i(n) & (\textbf{Min-f})\\ 
-F_{max}(n)=&\max_{i\in [1,k]}f_i(n) & (\textbf{Max-f})\\ 
+F_{min}(n)=&\min_{i\in [1,k]}f_i(n) & (\textbf{\minf})\\ 
+F_{max}(n)=&\max_{i\in [1,k]}f_i(n) & (\textbf{\maxf})\\ 
 \end{align}
+
 
 %\subsection{$F_{min}$}
 
-\begin{theorem}[Min-$f$ is admissible]
-If $h$ is an admissible heuristic, then running Algorithm~\ref{alg:k-goal-bfs} with $F_{min}$ 
-as the node evaluation function ({\tt ComputeF}) will return an optimal solution, i.e., 
-it returns $k$ paths $\pi_1,\ldots, \pi_k$ such for every $i$ we have that $\pi_i$ is a lowest cost path from $s$ to $G_i$. 
+\begin{theorem}[\minf{} is admissible]
+If $h$ is an admissible heuristic, then running \kastar{} with $F_{min}$ 
+as the node evaluation function ({\tt ComputeF}) will return $k$ paths $\pi_1,\ldots, \pi_k$ such for every $i$ we have that $\pi_i$ is a lowest cost path from $s$ to $G_i$. 
 \label{the:min-f}
 \end{theorem}
  \begin{proof}
 To prove this, we show that when a goal node is expanded for the first time, then its $g$ value is guaranteed to 
 be the cost of the lowest-cost path from $s$ to that goal. 
 By negation, assume that a goal $G_i$ was expanded, but there is a better path to $G_i$
-that has not yet been discovered. Since the search is a best-first search, this means
-that \open{} has some node $n$ that is on a better path to $G_i$ and has not been expanded yet. 
+that has not yet been discovered. Since \kastar{} is a best-first search, \open{} has some node $n$ that is on a better path to $G_i$ and has not been expanded yet. 
 That is, 
 \begin{equation}
 g(n)+h_i(n)<g(G_i)
@@ -350,10 +351,10 @@ g(n)+h_i(n)<g(G_i)
 \end{equation}
 Since $G_i$ was chosen to be expanded before $n$, it must have a $F_{min}$ value no-larger than $n$, i.e.,
 \begin{align}
-F_{min}(n) \geq & F_{min}(G_i)\\
-g(n)+\min_j h_j(n) \geq & g(G_i)+\min_{j'} h_j(G_i)\\
-g(n)+\min_j h_j(n) \geq & g(G_i)\\
-g(n)+h_i(n) \geq & g(G_i) 
+F_{min}(n) &\geq  F_{min}(G_i)\\
+g(n)+\min_j h_j(n)& \geq  g(G_i)+\min_{j'} h_j(G_i)\\
+g(n)+\min_j h_j(n)& \geq  g(G_i)\\
+g(n)+h_i(n) &\geq  g(G_i) 
 \end{align}
 The last line above exactly contradicts Equation~\ref{eq:proof-1}. 
 \end{proof}
@@ -370,38 +371,31 @@ The last line above exactly contradicts Equation~\ref{eq:proof-1}.
  \label{fig:max-bad}
  \end{figure}
  
- When using Max-$f$, however, expanding a goal $g_i$ does not guarantee
- that the optimal solution to $g_i$ has been found. As a counter-example, consider 
- the graph in Figure~\ref{fig:max-bad}.
- In this example, using Max-$f$ will result in the following expansion order: $S$, $B$, and then $G_1$. At this stage, we expanded one of the goals -- $G_1$ -- while the best path found so far to it goes through $B$ and costs 40. However, a better path to it is through $A$, which costs only 10.
+ \begin{observation}[\maxf{} is not admissible]
+ 	Even if $h$ is an admissible heuristic, 
+ 	running \kastar{} with $F_{max}$ 
+ 	as the node evaluation function ({\tt ComputeF}) may return a path $\pi_i$ from $s$ to $G_i$ that is not optimal. 
+ 	\label{obs:max-f-inadmissible}
+ \end{observation}
+To demonstrate Observation~\ref{obs:max-f-inadmissible}, consider the graph in Figure~\ref{fig:max-bad}.
+ In this example, using \maxf{} will result in the following expansion order: $S$, $B$, and then $G_1$. At this stage, we expanded one of the goals -- $G_1$ -- while the best path found so far to it goes through $B$ and costs 40. However, a better path to it is through $A$, which costs only 10.
  
  
- Of course, one may still use Max-$f$ as an anytime algorithm. 
- Instead of assuming that when expanding a goal the best path to it has been found, we continue the search, , still looking for better path to that goal. The search halted when 
- [[Roni: do we still need to compute the heuristic for these goals?]]
- [[Roni: What is a good stopping condition for this option?]]
- %Concretely, we continued to compute the heuristic for all goals even after they were expanded, thus continuing to guide the search to look for better path continuing the search and looking for better path to the previously expanded goals. 
- 
- \subsubsection{Max-$f$ and Consistency}
- Interestingly, the inadmissibility of Max-$f$ is related to the {\em inconsistency} of the used heuristic. 
-  \begin{definition}[Inconsistent Heuristic]
- A heuristic $h$ is inconsistent if there exists a pair of states $x$ and $y$ such that
- \[ h(x)>c(x,y)+h(y) \]
- where $c(n,c)$ is the least cost path from $x$ to $y$
- \label{def:inconsistent}
- \end{definition}
- The observant reader may have noticed that the heuristic function in the example in Figure~\ref{fig:max-bad} is indeed inconsistent: $h_2(A)=50$ while its child, $G_1$, which is connected to it via an edge of cost 5, has $h_2(G_1)=20$. If $h$ was consistent the $h_2(A)-c(A,G_1)\leq h_2(G_1)$, where e$c(A,G_1)$ is the cost of the edge between $A$ and $G_1$. 
+ % MAX-F is OK for consistent heuristics
+  The observant reader may have noticed that the heuristic function in Figure~\ref{fig:max-bad} is inconsistent (Definition~\ref{def:consistent}): $h_2(A)=50$ while its child, $G_1$, which is connected to it via an edge of cost 5, has $h_2(G_1)=20$. If $h$ was consistent the $h_2(A)-c(A,G_1)\leq h_2(G_1)$, where e$c(A,G_1)$ is the cost of the edge between $A$ and $G_1$. 
+  Interestingly, if the heuristic used is consistent then using \maxf{} in \kastar{} is possible, guaranteeing that all paths returned are optimal. % wi(Definition~\ref{def:consistent}), then \maxf{} is admissible for \kastar{}. %the inadmissibility of Max-$f$ is related to the {\em inconsistency} of the used heuristic. 
  
  
-\begin{theorem}[Max-$f$ is admissible if $h$ is consistent]
+\begin{theorem}[\maxf{} is admissible if $h$ is consistent]
 If $G$ is undirected and $h$ is admissible and consistent, 
-then when running \kgbfs{} that uses Max-$f$ as an evaluation function,
-it holds that whenever a goal is expanded then the lowest-cost path to it has been found. 
+then running \kastar{} with $F_{max}$ 
+as the node evaluation function ({\tt ComputeF}) 
+will return $k$ paths $\pi_1,\ldots, \pi_k$ such for every $i$ we have that $\pi_i$ is a lowest cost path from $s$ to $G_i$. 
 \label{the:max-f}
 \end{theorem}
  \begin{proof}
  Assume by negation that Theorem~\ref{the:max-f} is not correct. This means
- that there is a case where a goal $G_i$ is expanded while $g(G_i)$ is not optimal. Since we are running a BFS, this means that there exists a node $n\in OPEN$ that is on the optimal path to $G_i$ and for which $g(n)=g^*(n)$. Formally, 
+ that there is a case where a goal $G_i$ is expanded while $g(G_i)$ is not optimal. Since \kastar{} is a best-first search, this means that there exists a node $n\in \open{}$ that is on the optimal path to $G_i$ and for which $g(n)=g^*(n)$. Formally, 
  \begin{equation}
      g(n)+h_i^*(n) = g^*(n)+h_i^*(n) < g(G_i)
     \label{eq:not-optimal}
@@ -425,13 +419,68 @@ Now, since we assumed that we have not found the optimal path to $G_i$ (Eq.~ \re
 \Rightarrow c(n,G_i) + h_l(G_i) & < h_l(n) \label{eq:h-inconsistent} 
 \end{align}
 Thus, Equation~\ref{eq:h-inconsistent} directly contradicts the assumption
-that $h$ is consistent (see Definition~\ref{def:inconsistent}). 
+that $h$ is consistent (see Definition~\ref{def:consistent}). 
 \end{proof} 
+
+
+
+
+\subsection{Eager vs. Lazy}
+
+For the rest of this paper we assume that the heurstic $h$ is admissible and consistent, and thus both \maxf{} and \minf{} are valid options to use in \kastar{}. Under this assumption, a direct consequence from the proofs of Theorems~\ref{the:min-f} and~\ref{the:max-f} is that when a goal $G_i$ is expanded by \kastar{} (using either \maxf{} or \minf{}) we are guaranteed that the optimal path to it has been found. This is why we remove it from the list of relevant goals (see line~\ref{line:removeGoal} in Algorithm~\ref{alg:k-goal-bfs}). Removing a goal from the list of relevant goals has two potential effects. First, computing the node evaluation function for any state generated from here on will be cheaper, as there is no point in computing the heuristic function for goals that are no longer relevant. Second, for states already generated there is no point in considering the $f$ value for goals that are no longer relevant. This means that the states in \open{} might need to be re-sorted. For example, assume a \kgs{} problem with two goals $G_1$ and $G_2$, and consider two states $n_1$ and $n_2$ having $f_1(n_1)=10, f_2(n_1)=4, f_1(n_2)=5$, and $f_2(n_2)=10$. If we are running \kastar{} with \minf{}, we will expand $n_1$ before $n_2$ because $F_{min}(n_1)=4$ while $F_{min}(n_2)=5$. However, if goal $G_1$ was expanded, then it is removed from the set of relevant goals. Consequently, $F_{min}(n_1)$ becomes 10 while $F_{min}(n_2)$ remains 5, and therefore now $n_2$ will be expanded before $n_1$. A similar example can be constructed for \kastar{} that uses \maxf{}.
+
+
+
+One option to address this is to completely re-sort \open{} after removing a goal from the list of relevant goals (line~\ref{line:removeGoal}). 
+In other words, when a goal is expanded, recompute the node evaluation function ({\tt ComputeF}) for all nodes in \open{} to get an updated $F_n$ value and then  re-sort \open{} accordingly. 
+This option is valid but can be costly. To quantify the cost of this option, 
+let $Gen_k(i)$ denote the number of states generated by \kastar{} until $i^{th}$ goal has been found.\footnote{Note the $i^{th}$ goal found by \kastar{} is not necessarily goal $G_i$.} 
+
+%After the first goal is found, there are $Gen_k(1)$ states in \open{}, and thus re-sorting them will require a computational cost of $Gen_k(1)\cdot (C_{add} + k)$, assuming that re-computing the  evaluation function requires $k$ timesteps -- going over the $k-1$ remaining heuristics and aggregating their values (we assume that every state stores its $h$ values to avoid re-computing them at this stage). After the second goal is found, there are $Gen_k(2)$ nodes in \open{} but there are fewer heuristics to compute ($k-2$), and thus re-sorting open requires $Gen_k(2)\cdot (C_{add} + k-1)$. Following this reasoning, the extra computational cost incurred by re-sorting after every goal is found is 
+%\begin{equation}  
+%\sum_{i=1}^{k-1} Gen_k(i)\cdot (C_{add}+k-i+1)
+%\label{eq:re-sort-cost}
+%\end{equation}
+
+After the first goal is found, there are $Gen_k(1)$ states in \open{}. If we assume that re-computing the evaluation function for a state incurs constant cost, then re-sorting them will require a computational cost of $Gen_k(1)\cdot C_{add}$. After the second goal is found, there are $Gen_k(2)$ nodes in \open{} so re-sorting \open{} requires $Gen_k(2)\cdot C_{add})$. Following this reasoning, the extra computational cost incurred by re-sorting after every goal is found is 
+\begin{equation}  
+\sum_{i=1}^{k-1} Gen_k(i)\cdot C_{add}
+\label{eq:re-sort-cost}
+\end{equation}
+
+Note that $Gen_k(k)$ contains all the state generated by \kastar{}. Since every generated state is inserted to \open{}, a computation cost of $Gen_k(k)\cdot C_{add}$ will be incurred even if no re-sorting is done. 
+Thus, if $Gen_k(k)>>Gen_k(i)$ and $C_{add}$ is reasonable then the over-head of re-sorting is negligible. 
+
+
+% Lazy!
+As we show below in the experimental result, re-sorting can, in fact, incur a significant amount of runtime. To this end, we propose an alternative approach in which states are re-evaluated and re-sorted in a lazy manner. This means that when a state is popped out of \open{} for expansion (line~\ref{line:open:chooseNode} in Algorithm~\ref{alg:k-goal-bfs}), we re-compute its $F$ value. If its $F$ value has been changed, we re-insert it into \open{}. This approach is directly inspired by the Lazy \astar{} algorithm~\cite{betzalel2015typeSystem,tolpin2013toward}, where multiple heuristics are used towards the same goal, and are evaluated lazily in a similarly manner.  
+
+
+
+\roni{What can we say about lazy? is it admissible? is it redundant for \maxf{}?}
+
+
+
+
+%Of course, one may still use Max-$f$ as an anytime algorithm.  Instead of assuming that when expanding a goal the best path to it has been found, we continue the search, , still looking for better path to that goal. The search halted when [[Roni: do we still need to compute the heuristic for these goals?]] [[Roni: What is a good stopping condition for this option?]]
+%Concretely, we continued to compute the heuristic for all goals even after they were expanded, thus continuing to guide the search to look for better path continuing the search and looking for better path to the previously expanded goals. 
+
 
 
 \section{Runtime Analysis}
 % Analysis
-Now, we compare the the two approaches descibed bove -- $k$ separate SPP problems or one BFS to return all the $k$ paths. 
+In this section we compare analytically the two main approaches we proposed for the \kgs{} problem: $k$ searches for one goal (running \astar{} $k$ times) or one search for $k$-goals (running \kastar{} once). 
+In this analysis we will assume that \kastar{} is implemented by eagerly re-sorting \open{} whenever a goal is found, to make the analysis simpler. 
+
+
+
+We will focus our analysis on 
+
+
+
+The potential redundancies of running $k$ searches was discussed in Section~\ref{sec:
+
+Now, we compare the two approaches described above -- $k$ separate SPP problems or one BFS to return all the $k$ paths. 
 It is common to estimate the runtime of BFS by counting the number of nodes that are expanded until the goal is found. However, we can show that both approaches will expand the same set of nodes.  However, the computation done per node is different. 
 
 [[Here will come Ariel's analysis of the runtime]]
