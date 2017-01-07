@@ -453,13 +453,37 @@ Thus, if $Gen_k(k)>>Gen_k(i)$ and $C_{add}$ is reasonable then the over-head of 
 
 
 % Lazy!
-As we show below in the experimental result, re-sorting can, in fact, incur a significant amount of runtime. To this end, we propose an alternative approach in which states are re-evaluated and re-sorted in a lazy manner. This means that when a state is popped out of \open{} for expansion (line~\ref{line:open:chooseNode} in Algorithm~\ref{alg:k-goal-bfs}), we re-compute its $F$ value. If its $F$ value has been changed, we re-insert it into \open{}. This approach is directly inspired by the Lazy \astar{} algorithm~\cite{betzalel2015typeSystem,tolpin2013toward}, where multiple heuristics are used towards the same goal, and are evaluated lazily in a similarly manner.  
+As we show below in the experimental result, re-sorting can, in fact, incur a significant amount of runtime. To this end, we propose an alternative approach in which states are re-evaluated and re-sorted in a lazy manner. This means that when a state is popped out of \open{} for expansion (line~\ref{line:open:chooseNode} in Algorithm~\ref{alg:k-goal-bfs}), we re-compute its $F$ value. If its $F$ value has been changed, we re-insert it into \open{}. 
+We call this algorithm Lazy \kastar{}, since it is directly inspired by the Lazy \astar{} algorithm~\cite{betzalel2015typeSystem,tolpin2013toward}, where multiple heuristics are used towards the same goal, and are evaluated lazily in a similarly manner.  
 
 
+\begin{figure*}
+	\includegraphics[width=\textwidth]{Lazy_cropped.pdf}      
+	\caption{The left hand graph shows an example where using \maxf{} with Lazy \kastar{} results in suboptimal solutions. The right hand graph shows a similar example, but where using Lazy \kastar{} does result in an optimal solutions.}
+	\label{fig:lazy}
+\end{figure*}
 
-\roni{What can we say about lazy? is it admissible? is it redundant for \maxf{}?}
+As an example, consider running Lazy \kastar{} with \minf{} on graph depicted in the right hand side of Figure~\ref{fig:lazy}. Assume we have a perfect heuristic in all states except for the goal states $G_1$ and $G_2$ that have a zero heuristic to each other, i.e., $h_2(G_1)=0$ and $h_1(G_2)=0$. After expanding the start state $s$, states $n_1$, $n_2$, and $G_2$ are generated. Using \minf{}, we have $F(n_1)=\max(10,5)=5$, $F(n_2)=\max(7,14)=7$, and $F(G_2)=\max(0,0)=0$. So the next state expanded is goal $G_2$, which is then removed from the set of relevant goals. At this stage, states $n_1$ and $n_2$ are both in \open{} and their $F$ values are {\em stale} in the sense that they were computed for $G_1$ and $G_2$ while the set of relevant goals at this stage contain only $G_2$. According to these stale $F$ values, the next state to choose from \open{} is $n_1$ with $F(n_1)=5$. After popping $n_1$ out of \open{}, however, its $F$ value is re-computed  using Lazy \kastar{}. We denote by $F^u_{min}(n)$ this $F$ value of $n$, which is computed with respect to the current set of relevant states. According to Lazy \kastar{}, if $F^u_{min}(n)\geq F(n)$ then we set $F(n)$ to be $F^u_{min}(n)$ and re-insert $n$ into \open{}. Consequently, $n_2$ will be expanded, followed by $G_1$, finally finding the optimal path to $G_1$ as well. 
 
 
+% Lazy does not work for Max-f, but does work on Min-f
+The correctness of Lazy \kastar{} depends on the node evaluation function. For example, consider running Lazy \kastar{} with \maxf{} on the graph in left hand side of Figure~\ref{fig:lazy}. This is a \kgs{} problem with two goals ($k=2$) that is similar to the example discussed above, and we assume here too that we have the perfect heuristic in all states except for the goal states $G_1$ and $G_2$ that has a zero heuristic to each other ($h_2(G_1)=h_1(G_2)=0$). After expanding the start state $s$, states $n_1$, $n_2$, and $G_1$ are generated. Using \maxf{}, we have $F(n_1)=\max(10,3)=10$, $F(n_2)=\max(7,7)=7$, and $F(G_1)=\max(0,0)=0$. Therefore, $G_1$ is expanded, and is subsequently removed from the set of relevant goals. At this stage, states $n_1$ and $n_2$ are both in \open{} and their $F$ values are {\em stale} in the sense that they were computed for $G_1$ and $G_2$ while the set of relevant goals at this stage contain only $G_2$. According to these stale $F$ values, the next state to expand is $n_2$ with $F(n_2)=7$. This would result in adding $G_2$ to \open{} with $F(G_n)=7$ and subsequently $G_2$ will be expanded and the search will halt, returning a suboptimal path to $G_2$ through $n_2$. If, after $G_1$ was removed from the set of relevant goals the $F$ values of the states in \open{} would have been re-computed and \open{} re-sorted accordingly, then $n_1$ would have been expanded before $n_2$, finding the optimal path to $G_2$. Thus, {\bf using Lazy \kastar{} with \maxf{} is not correct, potentially leading to suboptimal paths to some of the goals}. By contrast, Lazy \kastar{} is correct with \minf{}. 
+
+
+% Lazy with minf is good
+\begin{theorem}[Lazy \kastar{} with \minf{} is admissible]
+Every path $\pi_i$ returned by Lazy \kastar{} with \minf{} is guaranteed to be the lowest-cost path to its corresponding goal ($G_i$).
+\label{the:lazy-minf-correct}
+\end{theorem}
+\begin{proof}
+	We prove Theorem~\ref{the:lazy-minf-correct} by showing that Lazy \kastar{} with \minf{} and \kastar{} with \minf{} expand exactly the same set of states. For every $n$ it holds that $F_{min}(n)\leq F^u_{min}(n)$, since $F^u_{min}(n)$ is the minimum over a subset of elements that $F_{min}(n)$ is a minimum of. 
+	Since it was chosen for expansion then $n$ has the smallest $F$ value in \open{}
+	and $F_{min}(n)=F^u_{min}(n)$, i.e., its $F$ value is not stale, as otherwise it would have been re-inserted into \open{}. Therefore 
+	\[ \forall n'\in\open{} ~~ F^u_{min}(n)=F_{min}(n)\leq F_{min}(n') \leq F^u_{min}(n') \]
+	So, $n$ has the smallest $F^i_{min}$ value in \open{}, and thus it would have also been expanded by \kastar{}. 
+\end{proof}
+
+	
 
 
 %Of course, one may still use Max-$f$ as an anytime algorithm.  Instead of assuming that when expanding a goal the best path to it has been found, we continue the search, , still looking for better path to that goal. The search halted when [[Roni: do we still need to compute the heuristic for these goals?]] [[Roni: What is a good stopping condition for this option?]]
@@ -478,7 +502,7 @@ We will focus our analysis on
 
 
 
-The potential redundancies of running $k$ searches was discussed in Section~\ref{sec:
+
 
 Now, we compare the two approaches described above -- $k$ separate SPP problems or one BFS to return all the $k$ paths. 
 It is common to estimate the runtime of BFS by counting the number of nodes that are expanded until the goal is found. However, we can show that both approaches will expand the same set of nodes.  However, the computation done per node is different. 
