@@ -489,61 +489,10 @@ Every path $\pi_i$ returned by Lazy \kastar{} with \minf{} is guaranteed to be t
 %Of course, one may still use Max-$f$ as an anytime algorithm.  Instead of assuming that when expanding a goal the best path to it has been found, we continue the search, , still looking for better path to that goal. The search halted when [[Roni: do we still need to compute the heuristic for these goals?]] [[Roni: What is a good stopping condition for this option?]]
 %Concretely, we continued to compute the heuristic for all goals even after they were expanded, thus continuing to guide the search to look for better path continuing the search and looking for better path to the previously expanded goals. 
 
-
-
 \section{Runtime Analysis}
 % Analysis
 In this section we compare analytically the two main approaches we proposed for the \kgs{} problem: $k$ searches for one goal (running \astar{} $k$ times) or one search for $k$-goals (running \kastar{} once). 
 In this analysis we will assume that \kastar{} is implemented by eagerly re-sorting \open{} whenever a goal is found, to make the analysis simpler. 
-
-
-
-We will focus our analysis on 
-
-
-
-
-
-Now, we compare the two approaches described above -- $k$ separate SPP problems or one BFS to return all the $k$ paths. 
-It is common to estimate the runtime of BFS by counting the number of nodes that are expanded until the goal is found. However, we can show that both approaches will expand the same set of nodes.  However, the computation done per node is different. 
-
-[[Here will come Ariel's analysis of the runtime]]
-
-\subsection{Optimally Effective}
-One of the well-known properties of \astar{} is that it is {\em optimally effective}~\cite{dechter}. Informally, this means that given an admissible heuristic $h$, \astar{} will expand no more nodes than any other best-first search
-that uses the same heuristic function, up to tie breaking. 
-A more recent generalization of \astar{} also provides a similar guarantee
-with respect to the number of nodes generated~\cite{Goldenberg}. 
-In this section we ask whether we can say something similar about the proposed
-best-first search for \kgs{}. 
-
-\begin{definition}[Surplus Nodes and Necessary nodes]
-A node $n$ is called a surplus node if $g(n)+h(n)>opt$, where $opt$ is the cost of the lowest cost path. 
-A node $n$ is called a necessary node if $g(n)+h(n)<opt$, where $opt$ is the cost of the lowest cost path. 
-In the contest of the \kgs{} problem, we say that a node $n$ is a surlpus node for goal $G_i$ if $g(n)+h_i(n)>opt_i$, where $opt_i$ is the cost of hte lowest cost path to $G_i$ (from the initial state). Similarly, $n$ is a necessary node for $G_i$
-if $g(n)+h_i(n)<opt_i$. 
-\end{definition}
-It is know that an \astar{} search using $h_i$ 
-must expand all necessary nodes and will not expand any surplus node. 
-
-
-\begin{lemma}
-\kgbfs{} with the Min-$f$ evaluation function never expands a node
-that is a surplus node for all goals. 
-\label{lem:min-f-no-surplus}
-\end{lemma}
-The consequene of Lemma~\ref{lem:min-f-no-surplus} is 
-that \kgbfs{} with the Min-$f$ evaluation function expands no more nodes
-than running $k$ \astar{} searches, up to tie breaking. This suggests towards the 
-effectiveness of $kgbfs{}$. Interestingly, this property does not hold when using
-the Max-$f$ evaluation function. To show this, consider a \kgs{} problem with two goals 
-$G_1$ and $G_2$ (i.e., $k=2$). Now, assume that $opt_1=opt_2=2$
-and that the open list has three nodes $n_1, n_2,$ and $n_3$, such that
-their $g$ values is one, and the $h_1$ values of $n_1, n_2,$ and $n_3$
-are $9,5,$ and $1$, respectively, and the $h_2$ values of $n_1, n_2,$ and $n_3$ 
-are $1,5,$ and $9$ respectively. Consequently, the $f$ value for $n_1, n_2,$ and $n_3$
-when using Max-$f$ are $10,6,$ and $10$, respectively. Thus, node $n_2$ will be expanded
-while it is a surplus node for $G_1$ and for $G_2$. 
 
 
 
