@@ -84,50 +84,40 @@ artificial intelligence\sep AI\sep Heuristic Search
 
 \section*{Introduction}
 
+% SPP is classical, important and super general
+The shortest path problem (SPP) in a graph is a fundamental problem in Computer Science, with many applications in Artificial Intelligence and Operations Research. The input to an SPP problem is a graph and two vertices -- a {\em start} vertex and a {\em goal} vertex -- and the task is to find the lowest- cost path in the graph from start to goal. 
+Classical algorithms such as Dijkstra's algorithm~\cite{DIJ59} and \astar{}~\cite{hartNR68Astar} have been proposed for solving SPP. 
+SPP algorithms have been applied to various types of graphs. In some cases, the graph is given explicitly, e.g., representing roadmaps, grids and game mapss~\cite{sturtevant2012benchmarks}. In other cases, the graph is defined implicitly by an initial vertex and a set of transition functions, e.g., representing a space of possible robot configurations or puzzle permutations. 
 
 
-The shortest path problem (SSP) in a graph is the problem of finding the lowest
-cost path in a graph from one vertex -- denoted the {\em start} vertex -- to
-another vertex -- denoted the {\em goal} vertex. SSP is a well-studied problem
-and many algorithms have been proposed for solving it. Many times SPP is
-activated on explicitly given graphs such as roadmaps, grids, planning for
-robots and game maps~\cite{sturtevant2012benchmarks}.
-
-Now, imagine $k$ SSP problems, such that all the problems share the same start
-vertex. That is, we have a single start state but $k$ goal states. The task is
-to find $k$ shortest paths, each path is a shortest path from the start state
-to a different goal state. We denote this problem as {\em $k$-goal} problem (\kgs{}).
+% We talk about k SPP
+This paper addresses a generalization of SPP, where 
+the task is to solve $k$ SPP problems, such that all the problems share the same start vertex. That is, we have a single start state and $k$ goal states, and the task is to find $k$ shortest paths, where each path is a shortest path from the start state to a different goal state. We denote this problem as the {\em $k$-goal} problem (\kgs{}). 
 
 
-\kgs{} has many applications. For example, assume that
-a family is on its way to a vacation in a given destination. They want to make
-a stop in one of the $k$ amusement parks in the middle of the ride. In order to
-plan their trip they need the shortest path from their home to all $k$
-amusement parks. Then, assuming the graph is undirected they also need the $k$
-shortest path from their vacation destination to all these amusement parks.
-Once they know the cost of these paths they will make an informed decision of
-where they want to make the stop. Also, assume a tourist in a given hotel at a
-vacation city. Each day the tourist plans to visit another cite but return at
-night to the hotel. Thus, there is a single common start state but multiple
-goal states. Efficient solutions to the $k$-goal problem can be helpful in many
-robotic challenges. For example, you might have multiple drones in a location
-that need to be deployed in order to reach $k$ different goals.[[AF: I do not
-fully understand]]~\cite{DobsonB14}
+% k-goal is not TSP
+\kgs{} is similar but different from previously studied tasks such as the traveling saleman problem (TSP)~\cite{} and incremental search~\cite{koenig2004lifelong}. In TSP, the task is to find a single path that passes through a set of vertices. By contrast, in \kgs{} we aim for $k$ pathes, one per goal. In incremental search we have a single goal but the underlying graph changes. In \kgs{} the underlying graph is static, but we are given $k$ goals upfront to search paths for. 
 
 
-A trivial solution to \kgs\ is to run a SSP solver $k$ times. 
-Alternatively, we can define a single search problem whose goal 
-is a vector of $k$ states. We then propose and discuss several ways to adapt an SSP solver to solve this search problem. 
+% Motivation 1. Star-shaped tour
+\kgs{} has many applications. 
+Assume a tour planning application. It is common to prefer staying in the same hotel when visiting a city, visiting different sites in different days but returning every night to the same hotel to avoid packing and unpacking. Path planning under this constraint is thus a \kgs{} instance, as we have a single common start state and multiple goal states. 
 
-We demonstrate how heuristics can be used correctly to solve \kgs within these
-approaches. We then provide a theoretical study that compare the concurrent
-approaches and the trivial approach and study the pros and cons of each.
-Finally, experimental results are provide that demonstrate our findings on a
-number of domains.
+% Motivation 2. Choosing between multiple sites 
+A related example for \kgs{} occurs when planning a family vacation. 
+Assume that there are $k$ amusement parks and the family wishes to stop in one of them. It is hard, or even impossible, to exactly model the preferences of the different family members, but clearly the cost of getting to each of the different amusement parks is an important consideration for the family members to know about. Here too, we have a \kgs{} problem, where the start state is the family's home and the goals are the different amusement park. 
+This represents a more general scenario that occurs when developing an intelligent personal assistant, where the planning component may be decoupled from the agent's high-level decision making component, e.g. when following a Believe-Desire-Intention (BDI) architecture~\cite{bratman1999intention,georgeff1998belief}. In such cases there may be multiple goals an agent may wish to achieve and the cost of reaching them is important input to the agent's decision making module. 
 
-\roni{We need to think about the term {\em concurrent} in our context. I fear it will seem that we are talking about parallel computation.}
 
-\roni{TODO: SOME RELATED WORK? AF: which one?}
+Efficient solutions to the $k$-goal problem can be helpful in many
+robotic challenges. For example, consider the task of deploying multiple drones from a a central dispatcher location to $k$ locations. Another robotic application where the search for $k$ goals is needed is when using the Incremental Roadmap Spanner technique~\cite{marble2013asymptotically}, which is a motion planning technique that includes searching for the shortest path to a limited number of nearby locations. In fact, preliminary work on using heuristic search to solve \kgs{} was done exactly for this problem~\cite{DobsonB14}. 
+
+
+A trivial solution to \kgs\ is to run a SSP solver $k$ times. We analyze the runtime of this option and identify potential redundancies. Then, we propose an alternative approach where a single search algorithm is used to search for a vector of $k$ goals, avoiding some of these redundancies. Implementing this single-search algorithm, which we refer to as \kastar{}, includes several design choices, such as how to aggregate multiple heuristic estimates and what to do after an optimal path to one of the goals is found. We analyze the theoretical properties of these different design choices and point out their pros and cons. Then, we provide a theoretical and experimental study that compare the \kastar{} 
+approach and the simpler $k$ searches approach, providing useful guidelines  for when to use which option. 
+
+%\roni{We need to think about the term {\em concurrent} in our context. I fear it will seem that we are talking about parallel computation.}
+%\roni{TODO: SOME RELATED WORK? AF: which one?}
 
 \section{Background and Problem Definition}
 
@@ -254,8 +244,7 @@ expanded/generated. Thus, guaranteeing that \astar{} expands/generates the
 minimal number of states provides some sort of optimality guarantee for
 \astar{}'s efficiency compared to other equally informed algorithms.
 
-[[AF: not sure what is the point in the last sentence. In fact, the A* section
-can be significantly squeezed.]]\roni{1. I don't see a reason to squeeze the \astar{} section. This paper addresses a simple enough topic that it should be easily accessible to non-search people as well. 2. The last sentence aims to say that \astar{} is optimally effective and why this is important but without committing to the exact details of optimality}
+%[[AF: not sure what is the point in the last sentence. In fact, the A* section can be significantly squeezed.]]\roni{1. I don't see a reason to squeeze the \astar{} section. This paper addresses a simple enough topic that it should be easily accessible to non-search people as well. 2. The last sentence aims to say that \astar{} is optimally effective and why this is important but without committing to the exact details of optimality}
 
 \subsection{The $k$-Goal Problem}
 
@@ -323,8 +312,9 @@ To analyze the effectiveness of \kxastar{}, we use the notions of {\em necessary
 \label{def:surplus}
 \end{definition}
 Without any additional knowledge of the graph $G$, one needs to expand every necessary state in order to solve a given SPP,
-and one can solve a given SPP without expanding any surplus state. \roni{Meir/Ariel, what would be a good reference to put here? Dechter and Pearl? it is important to be accurate here}
-\astar{} must expand all necessary states but will never expand any surplus state.
+and one can solve a given SPP without expanding any surplus state~\cite{dechter1985generalizedBestFirst,goldenberg2014enhanced}. 
+\astar{} does exactly that: expands all necessary states but never expands any surplus state~\cite{dechter1985generalizedBestFirst}.
+
 
 Consequently, if $\Pi_i$ is the SPP problem from $s$ to $g_i$
 then using \kxastar{} to solve \kgs{} will end up expanding every state that is necessary w.r.t at least one of the $k$ SPP problems $\Pi_1,\ldots \Pi_k$ and never expand any state that is surplus w.r.t all these SPP problems.
@@ -987,13 +977,13 @@ For \kastar{}, a deeper analysis is needed. In addition to node generation ($C_{
 Next, we consider the number of 
 times each of the costs components -- node generation ($C_{gen}$), heuristic computation ($C_h$), and state re-sorting ($C_r$) -- is incurred.
 
-{\bf Node generation} ($C_{gen}$). Every generated state incurs
+\noindent {\bf Node generation} ($C_{gen}$). Every generated state incurs
 $C_{gen}$ exactly once. Thus, state generation add to the overall running time of \kastarmin{}:
 \[
 |\bigcup_{i\in{\{1,k\}}} Gen(\text{\astari{i}})|\cdot C_{gen} =
 |Gen_k(\text{\kastar{}})|\cdot C_{gen}  \displaystyle
 \]
-{\bf Heuristic computation} ($C_{h}$). 
+\noindent {\bf Heuristic computation} ($C_{h}$). 
 Until the first goal is expanded, \kastar{} computes $k$ heuristics,
 then, until the second is expanded, \kastar{} computes $k-1$ heuristics, and so on.
 So, $Gen_k(1)$ states are generated with $k$ heuristics,
@@ -1002,7 +992,7 @@ in \kastarmin{}, heuristic computations add to the overall running time:
 \[ \sum_{i\in[1,k]} Gen_k(i)\cdot C_h \]
 
 
-{\bf State re-sorting} ($C_r$). 
+\noindent {\bf State re-sorting} ($C_r$). 
 \open{} gets re-sorted after every goal is found (except for the last goal). 
 The computational cost is the number of states in \open{} times $C_r$.
 So, if $O_i$ is the number of states in \open{} when goal $g_i$ is expanded, then
@@ -1017,10 +1007,9 @@ the cost added to the overall running time that is due to adding states to \open
         $C_r$		&	0												& $\sum_{i\in[1,k-1]} O_i$\\        
         \hline
     \end{tabular}
-    \caption{Analysis of the computational costs incurred by \kxastar{} and \kastarmin{}
-        when solving a \kgs{} problem with arbitrary $k$.
-        Some costs are incurred the same or less in one algorithm than the other. Such cases are marked with an asterisk. }
-    \label{tab:time-analysis}
+       \caption{Analysis of the computational costs incurred by \kxastar{} and \kastarmin{}.}
+       % when solving a \kgs{} problem with arbitrary $k$.	Some costs are incurred the same or less in one algorithm than the other. Such cases are marked with an asterisk.}
+   \label{tab:time-analysis}
 \end{table}
 
 
@@ -1219,13 +1208,27 @@ could not solve even small-sized problems even for $k=2$. Average running time a
 8           & 1.18                  & \textbf{0.67}       & \textbf{1,364}        & 1,512               & 66.63                 & \textbf{30.14}      & \textbf{53,268}       & 53,790              \\
 16          & 3.24                  & \textbf{1.35}       & \textbf{2,645}        & 3,058               & 206.03                & \textbf{59.51}      & \textbf{103,674}       & 105,863     \\ \hline
     \end{tabular}
-    \caption{The average runtime and average number of states generated in the pancake experiments, for \kastar{} with \minf{} and for running $k$ independent \astar{} searches. Best results per $k$ are highlighted in bold.}
+    \caption{The average runtime and average number of states generated in the pancake experiments, for \kastar{} with \minf{} and for running $k$ independent \astar{} searches. Best results per $k$ are highlighted in bold.} 
     \label{tab:pancake-minf-k-searches}
-\end{table*}
+  \end{table*}
 
 
 Table~\ref{tab:pancake-minf-k-searches} presents the results for 10 pancakes and for 20 pancakes, for 1, 2, 4, 8, and 16 goals, comparing \kastarmin{} and \kxastar{}.
 The results show that while \kastarmin{} usually generates fewer states, its overall runtime is comparable or worse than running \kxastar{}. This is because in exponential domains the intersection between the sets of states generated by each search is small compared to size of the last $f$ layer of each search. \roni{Meir and Ariel, I'm looking for a nicer explanation. Any thoughts?}
+
+
+\begin{figure}
+	\includegraphics[width=\columnwidth]{pancake-goal-distance_cropped.pdf}
+	\caption{10 pancake domain. Runtime as a function of the distance between the goals in \kgs{} with two goals.}
+	\label{fig:2-goal-pancake}
+\end{figure}
+
+
+To gain a deeper insight into the behavior of the various \kgs{} algorithm in this domain, we performed additional experiments.  Figure~\ref{fig:2-goal-pancake} plots the running time of Lazy \kastarmin{} and \kxastar{} for a \kgs{} instance with two goals ($k=2$). Here, we show the relative running time of \kastarmin{} compared to \kxastar{}. Similar to Figure~\ref{fig:2-goal}, the $x$-axis here is the distance between the goals. We generate problem instances for this experiment by choosing the standard goal state (where all pancakes are ordered nicely) and performing and limited number of random walks from it. We compared the performance of \kxastar{} and Lazy \kastarmin{} for \kgs{} problems with two goals, where we varied the distance between the two goals. This was done by choosing the second goal by performing a limited number of random walks. 
+
+
+As we observed in the grid path finding domain, when the goals are very close, \kastarmin{} is better, as there is a large intersection between the states generated when searching both goals. However, we observe here that unlike the grid path finding domain, the advantage of \kastarmin{} quickly disappears, and for cases where the goals are more than 5 steps apart it is better to use \kxastar{}. This supports are analysis, as in exponential domains a small distance between the goal can result in needing a very large number of unique states to expand per goal.  
+
 
 
 To conclude our experimental results, we observed the following trends:
@@ -1244,35 +1247,32 @@ To conclude our experimental results, we observed the following trends:
 \subsection{Related work}
 \label{sec:related-work}
 
-There are several well-studied graph problems that are related to $k$-goal search. In the traveling salesman problem (TSP), we aim to find a shortest path that passes through a set of vertices.
-...
-
-In multi-objective search, we have multiple objectives function that we wish to optimize. E.g., in a navigation application one may want to optimize for path length and also for ease of navigation. An optimal
-solution to a multi-objective optimization problem is usually a solution that is Pareto-optimal, and it is often the case that one would like the set of all Pareto-optimal solutions.
+\kgs{} is similar to many previously studied problems. As mentioned in the introduction, it is different from TSP in that in TSP the task is to find a shortest path that passes through a set of vertices, while in \kgs{} that task is to find $k$ shortest path, one to each vertex. In that sense it is similar to the minimal spanning tree (MST) problem, but we only require optimal path to a selected set of $k$ vertices and not to all vertices (as in MST). 
 
 
-An important distinction to make is that \kgs\ is different from the problem where $k$ possible goals are given and the task is to find the shortest path to the closest goal. In \kgs\ we must find the shortest path to each of the goals, and not just to the closest one.
+\kgs{} is also different from a disjunction of $k$ goals, i.e., from the case where there are $k$ possible goals and the task is to find the lowest cost path to the closest one. Unlike this case of a disjunction of $k$ goals, in \kgs\ we must find the shortest path to each of the goals, and not just to the closest one.
+
+Somewhat related is the work on {\em multi-objective search}, where we have multiple objectives function that we wish to optimize. For example, in a navigation application one may want to optimize for path length and also for ease of navigation. An optimal solution to a multi-objective optimization problem is usually a solution that is Pareto-optimal, and it is often the case that one would like the set of all Pareto-optimal solutions. This is fundamentally different from \kgs{}, where we have a single optimization criteria -- we must have the lowest-cost path to all $k$ goals. 
 
 
-The \kgs{} problem is related to the problem addressed by incremental search algorithms such as Lifelong Planning \astar{}~\cite{koenig2004lifelong}. Incremental search algorithm are designed to solve a sequence of search problems, where the start and goal of these search problems are the same, but the underlying graph has changed. The key idea in incremental search algorithms is to re-use information from previous searches to solve faster the current search problem. However, unlike the incremental search setting is different from \kgs{}: in incremental search we have one goal and the environment is dynamic, while in \kgs{} we have $k$ goals but assume the environment does not change.
+The \kgs{} problem is related to the problem addressed by incremental search algorithms such as Lifelong Planning \astar{}~\cite{koenig2004lifelong},  D*-Lite~\cite{koenig2005fast}, and Path-Adaptive A*~\cite{hernandez2015reusing}. Incremental search algorithm are designed to solve a sequence of search problems, where the start and goal of these search problems are the same, but the underlying graph has changed. The key idea in incremental search algorithms is to re-use information from previous searches to solve faster the current search problem. However, unlike the incremental search setting is different from \kgs{}: in incremental search we have one goal and the environment is dynamic, while in \kgs{} we have $k$ goals but assume the environment does not change.
 
-Another related problem is the moving-target search problem. Moving-target search problems are search problems where the goal changes during the search. This is different from \kgs{} where the goals do not change during the search, but we know upfront the $k$ goals.
+Another related problem is the moving-target search problem~\cite{koenig2007speeding,ishida1991moving}. Moving-target search problems are search problems where the goal changes during the search. This is different from \kgs{} where the goals do not change during the search, but we know upfront the $k$ goals.
 
-
-
-LPA*
-MGGA*
-GGA*
 
 \section{Conclusion and Future Work}
+In this work we studied the \kgs{} problem, and analyzed two fundamental approaches for solving it: $k$ single-goal searches and a single search for $k$ goals. We analyzed the deficiencies of $k$ single-goal searches and formalized \kastar{}, a single algorithm that searches for $k$ goals together. 
+Three variants of \kastar{} were presented: \kastarmax{}, Eager \kastarmin{}, and Lazy \kastarmin{}. Given an admissible heuristic, both Eager and Lazy \kastarmin{} are sound and complete, and if the heuristic is consistent so is \kastarmax{}. We then analyzed all the proposed algorithms theoretically, comparing their memory requirements and running time. Finally, we performed an experimental study on two domains, showing that empirically Lazy \kastarmin{} dominates the other \kastar{} variants. In addition, our results suggest that 
+in polynomial domains it is usually the case that running \kastar{} is better than running $k$ individual \astar{} searches, but in exponential domains running $k$ individual searches is usually better. In addition, if the number of goals is very large then running uniform cost search may be the best option. 
 
 
+This work is, to the best of our knowledge, the first study of using heuristic search techniques to solve \kgs{}. There are several exciting directions for future work. First, we only explored in this work how to avoid some of the redundant computations done when performing $k$ individual searches. As mentioned briefly in Section~\ref{sec:k-one-goal}, a different way to benefit from searching for multiple goals is that while searching for one goal one can learn valuable information about the underlying graph, which may later be used to improve the search. This can include, for example, learning techniques to improve the quality of the heuristic. 
 
-In future work we will explore ways in which the search for one goal
-can provide information to help searching for the other goals.
+One way to do so in undirected graphs is to use the heuristic for one goal and the heuristic between the goals as an admissible heuristic, thus allowing to save the computational cost of re-computing the heuristic of a state if it is generated again for the other goal. This idea is inspired from memory-based heuristics used by path finding algorithms~\cite{sturtevant2007memory,sturtevant2009memory,goldenberg2011theCompressed}.
 
-One way to do so in undirected graphs is to use the heuristic for one goal and the
-heuristic between the goals as an admissible heuristic, thus allowing to save the computational cost of re-computing the heuristic of a state if it is generated again for the other goal. This idea is inspired from the canonical heuristics used by path finding algorithms~\cite{canonical}.
+Another way to learn information about the search space is to compile \kgs{} to an incremental search problem. This can be done by adding an artificial vertex that is connected to all goals, and running the search from this goal to the start state. Then, every iteration of the incremental search algorithm will change the weight of the edges from the artificial goal to the actual goal, setting the edge to exactly one goal with zero weight and all other edges as unpassable. This compilation may enable using incremental search algorithm such as Path-Adaptive A*~\cite{hernandez2015reusing} to solve the \kgs{} problem. 
+
+
 
 
 
