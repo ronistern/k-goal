@@ -163,7 +163,7 @@ But it is good to say that later TODO}
 A trivial solution to \kgs\ is to independently run a SSP solver $k$ times. We
 analyze the runtime of this option and identify potential redundancies. Then,
 we propose an alternative approach where a single search algorithm is used to
-search for a vector of $k$ goals, avoiding some of these redundancies. We refer
+search for all the $k$ goals together, avoiding some of these redundancies. We refer
 to this framework as \kastar{}. Implementing \kastar{} includes several design
 choices, such as how to aggregate multiple heuristic estimates and what to do
 after an optimal path to one of the goals is found. We analyze the theoretical
@@ -214,7 +214,7 @@ $G$ from $s$ to $g$. \label{def:spp}
     \While {\open{} $\neq \emptyset$} {
         $best \gets $ a state from \open{} with the smallest key \nllabel{line:open:chooseNode}\\
         Move $best$ from \open{} to \closed{}\\
-        \lIf {$best$ is the goal}{\Return the best path found to $best$}
+        \If {$best$ is the goal}{\Return the lowest-cost path found to $best$}
         \For{every action $A$ applicable at state $best$ \nllabel{line:nextNeighbor}}{
             $c \gets $ generate a state by applying $A$ to $best$ \nllabel{line:astar:generate-start}\\
             $g_{new}\gets g(best)+w((best,c))$\\
@@ -254,7 +254,7 @@ by $h(n)$. %, and there is an abundance of prior work in the literature on how t
 [[AF: In all our previous paper we always used $g$-value and $f$-value etc.
 Please change to this notation unless you really do not want to]]\roni{I really do not want to}
 
-In every iteration of \astar{}, the state with the lowest $f$ value in \open{}
+In every iteration of the main loop of \astar{}, the state with the lowest $f$ value in \open{}
 is moved from \open{} to \closed{}. If that state is a goal, the search halts
 returning the path found to it.\footnote{We omit in this pseudo code how
 back-pointers are maintained to  preserve the best path to each state.}
@@ -286,7 +286,7 @@ heuristic is admissible only for the states that are on a single lowest-cost
 path for \astar{} to guarantee
 optimality~\cite{karpas2012optimal,dechter1985generalizedBestFirst}.} Second,
 if the heuristic is {\em consistent} then \astar{} is guaranteed to never
-expand a state more than once.
+expand a state more than once~\cite{hartNR68Astar}.
 %when a state $n$ is expanded it is guaranteed that the lowest cost path from $s$ to $n$ has been found, and thus $g(n)$ is the cost lowest cost path from $s$ to $n$.
 \begin{definition}[Consistent Heuristic~\cite{hartNR68Astar}]
     A heuristic $h$ is {\bf consistent} if for every pair of states $x$ and $y$
@@ -304,7 +304,7 @@ states with equal $f$ values, \astar{} will only expand the minimal set of
 states required to find an optimal
 solution~\cite{dechter1985generalizedBestFirst}. A recent variant of \astar{}
 provides a similar guarantee with respect to the number of states generated as
-well~\cite{goldenberg2014enhanced}. This type of guarantees, often referred to
+well~\cite{goldenberg2013optimal}. This type of guarantees, often referred to
 as the {\em optimally effective} property of \astar{}, is  important because in
 many cases the runtime of the algorithm is correlated with the number of states
 expanded/generated. Thus, guaranteeing that \astar{} expands/generates the
@@ -315,8 +315,7 @@ minimal number of states provides some sort of optimality guarantee for
 
 \subsection{The $k$-Goal Problem}
 
-In this paper we focus on the $k$-goal search problem, which can be viewed as
-a generalization of SPP.
+In this paper we focus on the \kgs{} problem, which can be viewed as a generalization of SPP.
 
 %\begin{definition}[$k$-goal search]
 %   A \kgs\ problem is defined by a tuple $\tuple{G,s, g_1, g_2, \ldots, g_k}$,
@@ -337,15 +336,14 @@ $p_i$ is a lowest-cost path from $s$ to $g_i$. \label{def:k-goal}
 
 % k searches independentaly
 
-[[AF: I do not like your notation for vectors. I prefer overline. Your call]]
-\roni{I saw both in many papers. But mostly I saw the bold notation (although I am used to the overline from school). Keeping it as is.}
+%[[AF: I do not like your notation for vectors. I prefer overline. Your call]] \roni{I saw both in many papers. But mostly I saw the bold notation (although I am used to the overline from school). Keeping it as is.}
 
 Clearly, SPP is a special case of \kgs\ with $k=1$. A trivial solution to \kgs\
 is to consider it as $k$ independent SPPs and use \astar{} (or any other SPP
 algorithm) multiple times to solve these $k$ problems. In the next section we
 present this approach and analyze its complexity. In later sections we
-introduce a different approach that activates a single search that aims to find
-all $k$ goals concurrently. This allows sharing and re-using information
+introduce a different approach that activates a single search that aims to find the lowest-cost path 
+to all $k$ goals in a single pass of the state space. This allows re-using information
 between the $k$ different tasks, potentially decreasing the overall search
 effort.
 
@@ -358,7 +356,7 @@ effort.
     \For{$i$=1 to $k$}{
         $p_i\gets$ \astar{}($s$,$g_i$)\\
     }
-    \Return $p_1,\ldots p_k$\\
+    \Return $(p_1,\ldots p_k)$\\
     \caption{\kxastar{}: \kgs{} with $k$ \astar{}s}
     \label{alg:k-searches}
 \end{algorithm2e}
@@ -389,7 +387,7 @@ and one can solve a given SPP without expanding any surplus state~\cite{dechter1
 Consequently, if $\Pi_i$ is the SPP problem from $s$ to $g_i$
 then using \kxastar{} to solve \kgs{} will end up expanding every state that is necessary w.r.t at least one of the $k$ SPP problems $\Pi_1,\ldots \Pi_k$ and never expand any state that is surplus w.r.t all these SPP problems.
 Hence, one might think that \kxastar{} is ``optimally effective'' for \kgs{},
-expanding exactly the set of needs one must expand in order to solve the problem, up to tie-breaking between states with the same $f$ value.
+expanding exactly the set of states one must expand in order to solve the problem, up to tie-breaking between states with the same $f$ value.
 
 
 This conclusion is not accurate, however, as it overlooks two potential sources for improvement:
@@ -414,12 +412,12 @@ search~\cite{koenig2004lifelong} and to moving-target search
 algorithms~\cite{ishida1995moving,koenig2007speeding}. See
 Section~\ref{sec:related-work} for details. In this work we focus on the latter
 source of improvement. That is, we aim to avoid expanding a state multiple
-times when it is needed for finding the lowest cost path to multiple goals.
+times when it is needed for finding the lowest cost path to more than one goal.
 
 %in the search process.
 %Next, we analyze these redundancies in the search process that are due to such duplicates.
 
-\subsection{Redundancies in the $k$ Independent Searches Approach}
+\subsection{An Analysis of Redundancies in \kxastar{}}
 
 
 To analyze the redundant operations performed by \kxastar{}, we first describe
@@ -435,7 +433,7 @@ Algorithm~\ref{alg:astar}):
     We denote the computational cost of this step as $C_{gen}$.
 
 
-    \item {\bf Heuristic computation}  (line~\ref{line:compute-f}). This means computing the $h$ value of the generated state.
+    \item {\bf Heuristic computation}  (line~\ref{line:compute-f}). This refers to computing the $h$ value of the generated state.
     We denote the computational cost of this step as $C_{h}$.
 \end{enumerate}
 The exact value of $C_{gen}$ depends on the domain and various implementation
@@ -449,7 +447,7 @@ domains, where adding to \open{} incurs a constant
 time~\cite{GILON2016,BurnsHLR12}. Similarly, the cost of the heuristic
 computation ($C_h$) can vary widely as well, where some heuristics require
 constant time to compute while more sophisticated heuristics may involve
-poly-time computations.
+poly-time computations or even worse.
 
 
 %Each of these operations incur some computational cost. Let $C_{gen}, C_{dd}, C_{h},$ and $C_{add}$ denote the average computation cost of the above four operations, generation, duplicate detection, heuristic computation, and insertion into \open{}, respectively. In addition,
@@ -459,8 +457,8 @@ Let \astari{i} denote   the \astar{} search used to solve $\Pi_i$, and let
 $Gen(\text{\astari{i}})$ denote the set of states generated by \astari{i}.
 Clearly, \kxastar{} incurs at least $\sum_{i=0}^k
 |Gen(\text{\astari{i}})|\cdot(C_{gen}+C_{h})$ in terms of computation cost. The
-main source of inefficiency is that the intersection between the sets of states
-generated by the individual \astar{} searches can be not empty. This indicates
+main source of inefficiency is that the sets of states
+generated by the individual \astar{} may intersect. This indicates
 that some states will be generated in more than one of the $k$ searches, 
 incurring a cost of $(C_{gen}+C_{h})$ more than once for each of these states.
 
