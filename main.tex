@@ -1387,8 +1387,12 @@ For the \kxastar{}, we observe that adding pivots always helps reducing runtime.
 \label{tab:pancake-max-uniform}
 \end{table}
 
-Next, we present the results for the pancake puzzle.
-\roni{Meir: what was the heuristic used? how were the states generated? how many instances?}
+Next, we present the results for the pancake puzzle. The heuristic used was the GAP heuristic~\cite{helmert2010landmark}, adjusted so that it is suitable for different goal states. 
+%\roni{Meir: what was the heuristic used? how were the states generated? how many instances?}
+We experimented with 1, 2, 4, 8 and 16 goals ($k$). For every $k$ we generated 100 random instances, where goal $g_1$ was the standard pancake goal state (where the pancakes are stacked by size) and the other goals are random permutations. 
+
+
+
 The first results we report is that uniform cost search and \kastarmax{}
 could not solve even small-sized problems even for $k=2$. Average runtime and number of states generated  for $k=2$ and pancakes of size up to 9 are given in Table~\ref{tab:pancake-max-uniform}. These results are reasonable because in exponential domains running a search without a heuristic is not practical, and \kastarmax{} can behave similar to uniform cost search (as shown also in Figure~\ref{fig:min-vs-max}).
 
