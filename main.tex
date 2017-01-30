@@ -73,16 +73,16 @@
     E-mail: roni.stern@gmail.com}
 
 \begin{abstract}
-	In this paper we study the $k$ goal search problem (\kgs{}), 
-	which is the problem of finding the lowest-cost path 
-	from a given state to $k$ states. Two fundamental approaches 
-	are presented: searching for the $k$ goals one at a time,
-	or searching for all $k$ goals together in a single pass of the
-	search space. We call the latter approach \kastar{} 
-	and describe several ways it can be implemented. 
-	We lay the theoretical foundation for analyzing \kgs{} problems
-	and perform an empirical evaluation to demonstrate 
-	its applicability. 
+    In this paper we study the $k$ goal search problem (\kgs{}),
+    which is the problem of finding the lowest-cost path
+    from a given state to $k$ states. Two fundamental approaches
+    are presented: searching for the $k$ goals one at a time,
+    or searching for all $k$ goals together in a single pass of the
+    search space. We call the latter approach \kastar{}
+    and describe several ways it can be implemented.
+    We lay the theoretical foundation for analyzing \kgs{} problems
+    and perform an empirical evaluation to demonstrate
+    its applicability.
 \end{abstract}
 
 \begin{keyword}
@@ -771,22 +771,30 @@ active goals was different.
     \label{fig:need-resort}
 \end{figure}
 
+
 Considering stale $F$ values provides poor guidance to the search, directing it
 towards goals that are no longer active. For example, consider the \kgs{}
-problem depicted in Figure~\ref{fig:need-resort}. The edge weights are depicted in blue 
-near to the edges. The shortest path to $g_1$ costs of 5, consisting of following the edge from $s$ to $g_1$, 
-and the shortest path to $g_2$ costs, going to $g_1$ via $n_1$. After $s$ is expanded there are three states in \open{}: $g_1$, $n_1$, and $n_2$. Assume that the heuristics $h_1$ and $h_2$ are perfect and therefore we have:
-$F_{min}(g_1)=\min (5,8)=5$, 
-$F_{min}(n_1)=\min (10,3)=3$, 
-and $F_{min}(n_2)=\min (6,4)=4$. Thus, $n_1$ is expanded next, adding $g_2$ to \open{} with 
-$F_{min}(g_2)=\min (11,3)=3$, which is immediately expanded. 
-At this stage \open{} contains two states: $g_1$ with $F(g_1)=5$, and $n_2$ with $F(n_2)=4$. 
-So $n_2$ would be expanded, followed by expanding $g_1$ and halting. 
-However, the $F$ values of $g_1$ and $g_2$ were stale, as they were computed when $g_2$ was active but considered afterwards. 
-Now, imagine that after expanding $g_2$ we would have re-computed the $F$ values of $n_2$ and $g_1$. 
-Then, their $F$ values would be $F(g_2)=5$ and $F(n_2)=6$, and consequently, $g_2$ would have been expanded before $n_2$. 
-At this stage the search would halt, returning the optimal paths to $g_1$ and $g_2$ without ever expanding $n_2$. Indeed, $n_2$ is a surplus state (Definition~\ref{def:surplus}) with respect to both $g_1$ and $g_2$. 
-Thus, considering stale $F$ values introduced inefficiency to the search. 
+problem depicted in Figure~\ref{fig:need-resort}. The edge weights are depicted
+in blue near to the edges. The shortest path to $g_1$ costs of 5, consisting of
+following the edge from $s$ to $g_1$, and the shortest path to $g_2$ costs,
+going to $g_1$ via $n_1$. After $s$ is expanded there are three states in
+\open{}: $g_1$, $n_1$, and $n_2$. Assume that the heuristics $h_1$ and $h_2$
+are perfect and therefore we have: $F_{min}(g_1)=\min (6,15)=6$,
+$F_{min}(n_1)=\min (8,3)=3$, and $F_{min}(n_2)=\min (7,5)=5$. Thus, $n_1$ is
+expanded next, adding $g_2$ to \open{} with $F_{min}(g_2)=\min (12,3)=3$, which
+is immediately expanded. At this stage \open{} contains two states: $g_1$ with
+$F(g_1)=6$, and $n_2$ with $F(n_2)=5$. So $n_2$ would be expanded, followed by expanding $g_1$ and halting. However, the
+$F$ values of $g_1$ and $n_2$ were stale, as they were computed when $g_2$ was
+active. Now, imagine that after expanding $g_2$ we
+would have re-computed the $F$ values of $n_2$ and $g_1$. Then, their $F$
+values would be $F(g_1)=6$ and $F(n_2)=7$, and consequently, $g_1$ would have
+been expanded before $n_2$. At this stage the search would halt, returning the
+optimal paths to $g_1$ and $g_2$ without ever expanding $n_2$. Indeed, $n_2$ is
+a surplus state (Definition~\ref{def:surplus}) with respect to both $g_1$ and
+$g_2$. Thus, considering stale $F$ values introduced inefficiency to the
+search.
+
+%[[AF: there is a big mess in the exact f-values between the text and the figure. Please correct it.]]
 
 %[[AF: This example is hard to follow. You must to place edge weights in the figure to make it easy. Why is N2 surplus? what are the optimal paths to each state? Give more information. Two sentences start with "Note". Please rewrite and better explain.]]
 %The problem is even graver when using \kastarmax{}, where re-computing the $F$ value of some of the states in \open{} is necessary to ensure optimality of the returned paths. For example, consider running \kastarmax{} on the same \kgs{} problem given in Figure~\ref{fig:need-resort}, and assume that all $f$ values are accurate. In this case, $n_2$ will expanded first, followed by $g_2$ and $g_1$ choose from \open{} is $n_1$ with $F(n_1)=5$. and may cause \kastarmin{} to expand states that are surplus for all  for states already generated there is no point in considering the $f$ values for goals that are no longer active, as it will unnecessarily guide the search towards an already achieved goal.
@@ -803,9 +811,9 @@ One option to address this is to completely reorder \open{} after removing a
 goal from the list of active goals (line~\ref{line:removeGoal}). In other
 words, when a goal is expanded, recompute the state evaluation function ({\tt
 ComputeF}) for all states in \open{} to get an updated $F$ value and then
-reorder \open{} accordingly. We refer to this option as {\em Eager \kastar{}}. 
-Using Eager \kastar{} can be costly, as it requires reordering \open{} $k-1$ 
-times. We analyze this added overhead in Section~\ref{sec:theoretical-analysis}. 
+reorder \open{} accordingly. We refer to this option as {\em Eager \kastar{}}.
+Using Eager \kastar{} can be costly, as it requires reordering \open{} $k-1$
+times. We analyze this added overhead in Section~\ref{sec:theoretical-analysis}.
 
 
 Observe that the $F$ value of some states do not change when reordering \open{}
@@ -819,52 +827,51 @@ expanded there is no need to re-compute the $F$ value of any state for which
 $F(n)\neq f_i(n)$.
 
 %[[AF: hoe about principal goal? or key goal?]]
-We implemented this optimization by keeping track of the {\em responsible goal} 
-for every state $n$, that is, the goal $g_i$ for which $F(n)=f_i(n)$. 
-If there are multiple responsible
-goals, we choose one arbitrarily. Then, we only re-compute the $F$ value of a
-node if its responsible goal is expanded. This version of Eager \kastar{} is 
-referred to as Eager$^+$. 
+We implemented this optimization by keeping track of the {\em responsible goal}
+for every state $n$, that is, the goal $g_i$ for which $F(n)=f_i(n)$. If there
+are multiple responsible goals, we choose one arbitrarily. [[AF: Why? choose
+them all. Only when it is empty you should re-order open]] Then, we only
+re-compute the $F$ value of a node if its responsible goal is expanded. This
+version of Eager \kastar{} is referred to as Eager$^+$. [[AF: I would not call
+it eager+. This is an implementation trick for eager and should not have its
+own sign.]] [[AF: you do not only recompute. You also change its place in OPEN.
+If there are too many of these, why not sort OPEN from scratch?]]
 
-
-A more involved implementation would
-keep track of the set of responsible goals for every state, i.e., the set of goals
-for which their $f$ value is equal to that states $F$ value. 
-Then, when a goal $g_i$ is expanded, 
-we iterate over every state that had $g_i$ in the set of responsible goals
-and remove $g_i$ from that state. Then, a state will only re-compute its $F$ value 
-if its set of responsible goals is empty. 
-This approach, however, has requires storing more information per state and is more 
-complex, and so we implemented only  Eager$^+$ in our experimental. 
+A more involved implementation would keep track of the set of responsible goals
+for every state, i.e., the set of goals for which their $f$ value is equal to
+that states $F$ value. Then, when a goal $g_i$ is expanded, we iterate over
+every state that had $g_i$ in the set of responsible goals and remove $g_i$
+from that state. Then, a state will only re-compute its $F$ value (and reposition it in \open{} accordingly) if its set of
+responsible goals is empty. This approach, however, has requires storing more
+information per state and is more complex, and so we implemented only Eager$^+$
+in our experimental. %[[AF: OK, you answered me. But, I think this should be the correct way to do eager. I do not like eager+ not in its name and not in its content. By the end of the day, the responsible goal is out of the computation so it does not really matter.]]
 %former approach, which keeps track of a single responsible goal.
 
 %[[AF: the last sentence is not understandable. you keep the set for who? Which nodes? For everybody? please better explain what you mean. I did not understand. Also, consider to delete this all together. You did not implement it so why bother? Maybe in a footnote? But, please better explain for sure.]]
 
-
+%[[AF: I would delete all the non eager+ from the experiments]]
 
 % Lazy!
 
 \subsection{Lazy \kastar{}}
+% We outlined above an example where the cost of reordering \open{} after a goal is expanded does not [[AF: I think you want to delete the "not"]]incur significant overhead [[AF: where did you outline this? You just showed that you must reorder open, otherwise, you have more node expansions]]. However, this is not always the case. For example, in domains where the search frontier does not grow exponentially, then states generated after the $k-1$ goal has been expanded are not larger than the states generated up to that point. Indeed, we show in our experimental results that in some domains reordering does, in fact, incur a significant amount of runtime.
+%[[AF: you just said that it is negligible. Please explain why this is not the case in these domains. Are they polynomial?]]
 
-We outlined above an example where the cost of reordering \open{} after a goal is 
-expanded does not incur significant overhead. However, this is not always the case. 
-For example, in domains where the search frontier does not grow exponentially, 
-then states generated after the $k-1$ goal has been expanded are not larger
-than the states generated up to that point. Indeed, we show in our 
-experimental results that in some domains reordering does, in fact, incur a significant amount of
-runtime. 
-%[[AF: you just said that it is negligible. Please explain why this is not the case in these domains. Are they polynomial?]] 
-To this end, we propose
-an alternative approach in which states are re-evaluated and reordered in a
-lazy manner. This means that only when a state is popped out of \open{} for
-expansion (line~\ref{line:open:chooseNode} in Algorithm~\ref{alg:kastar}), we
-re-compute its $F$ value. If its $F$ value has increased and it is no longer
-the minimal in \open, we re-insert it into \open{}. We call this algorithm Lazy
-\kastar{}, since it is directly inspired by the Lazy \astar{}
-algorithm~\cite{betzalel2015typeSystem,tolpin2013toward}, where multiple
-heuristics are used towards the same goal, and are evaluated lazily in a
-similar manner. Lazy \kastar{} behaves differently when using \maxf{} and when
-using \minf{}. Thus, we analyze them separately. 
+%[[AF: Roni will reword and say that eager can be costly.]]
+
+Both Eager \kastar{} and Eager$^+$ \kastar{} will re-compute the $F$ value and reorder all the states in \open{} that have stale $F$ values. 
+This incurs a cost that can be significant, and indeed we observe this in our experimental evaluation. To this end, we propose an alternative approach in which states are re-evaluated and reordered in a lazy manner. This means that only when a state is popped out of \open{} for expansion (line~\ref{line:open:chooseNode} in
+Algorithm~\ref{alg:kastar}), we re-compute its $F$ value.\footnote{Actually, we only consider re-computing the $F$ value of a state if its responsible goal is no longer active.} If its $F$ value has
+increased and it is no longer the minimal in \open, we re-insert it into
+\open{}. 
+
+
+
+We call this algorithm Lazy \kastar{}, since it is directly inspired
+by the Lazy \astar{} algorithm~\cite{betzalel2015typeSystem,tolpin2013toward},
+where multiple heuristics are used towards the same goal, and are evaluated
+lazily in a similar manner. Lazy \kastar{} behaves differently when using
+\maxf{} and when using \minf{}. Thus, we analyze them separately.
 %[[AF: I already said that I think these terms are redundant. Your call]]\roni{I don't see a better way to discuss the different F functions then to name them}
 
 %n particular, the lazy approach only brings benefit to \kastarmin{}
@@ -885,7 +892,7 @@ using \minf{}. Thus, we analyze them separately.
 Consider running Lazy \kastarmin{} on the graph depicted in
 Figure~\ref{fig:lazy}. Assume we have a perfect heuristic for all states except
 for the goal states $g_1$ and $g_2$ that have a zero heuristic to each other,
-i.e., $h_2(g_1)=0$ and $h_1(g_2)=0$. 
+i.e., $h_2(g_1)=0$ and $h_1(g_2)=0$.
 %[[AF: can you give them epsilon heuristic?]] \roni{why?}
 After expanding the start state $s$, states $n_1$, $n_2$, and
 $g_2$ are generated. Using \minf{}, we have $F(n_1)=\min(10,5)=5$,
@@ -903,16 +910,14 @@ $n_1$ into \open{}. Consequently, $n_2$ will be expanded, followed by $g_1$,
 finally completing the search with an optimal path to both goals. %$g_1$ as well.
 
 
-Note that the enhancement proposed earlier for Eager \astar{} (Eager$^+$), 
-in which a vertex is reordered only if its
-responsible goal is no longer active, applies here too. That is, we only
-consider recomputing the $F$ value of a state if its responsible goal is
-inactive.
 
 
 
-We now prove that although Lazy \kastarmin{} does not reorder all the states in \open{} 
-when a goal is expanded, it still expands states in order of their up-to-date $F$ values (i.e., according to the $F^u$ value). 
+
+
+We now prove that although Lazy \kastarmin{} does not reorder all the states in
+\open{} when a goal is expanded, it still expands states in order of their
+up-to-date $F$ values (i.e., according to the $F^u$ value).
 % Lazy with minf is good
 \begin{lemma}[The Efficiency of Lazy \kastarmin{}]
 Lazy \kastarmin{} always expands the state in \open{} with the smallest $F^u$
@@ -924,9 +929,9 @@ Lazy \kastarmin{} always expands the state in \open{} with the smallest $F^u$
 %[[AF: the same sentence is repeated three times.]]
 
 We prove Theorem~\ref{the:lazy-minf-correct} by induction on the iterations of
-the main loop of Lazy \kastarmin{}. 
-%, showing that Lazy \kastarmin{} and Eager \kastarmin{} expand exactly the same set of states. 
-The base of the induction is trivial: in the first step $F(s)=F_u(s)$. Now assume that in the first $m-1$ iterations, Lazy \kastarmin{} expanded the state with the smallest $F^u$ value, and consider the $m^{th}$ iteration of Lazy \kastarmin{}. 
+the main loop of Lazy \kastarmin{}.
+%, showing that Lazy \kastarmin{} and Eager \kastarmin{} expand exactly the same set of states.
+The base of the induction is trivial: in the first step $F(s)=F_u(s)$. Now assume that in the first $m-1$ iterations, Lazy \kastarmin{} expanded the state with the smallest $F^u$ value, and consider the $m^{th}$ iteration of Lazy \kastarmin{}.
 %  up to tie-breaking [[AF: what do you mean up to tie breaking. If you break ties differently, it is not the same set of states. So, how can you prove it? Maybe say that we assume that they break ties in the same manner?]], and consider the $m^{th}$ iteration of Lazy \kastarmin{}.
 
 
@@ -942,40 +947,45 @@ iteration of Lazy \kastarmin{}. Hence, it had the smallest $F$-value in
 \open{}. In addition, $F_{min}(n)=F^u_{min}(n)$, as otherwise it would have
 been re-inserted into \open{}. Therefore
 \[ \forall n'\in\open{} ~~ F^u_{min}(n)=F_{min}(n)\leq F_{min}(n') \leq F^u_{min}(n') \]
-    So, $n$ has the smallest $F^u_{min}$ value in \open{}, as required. 
+    So, $n$ has the smallest $F^u_{min}$ value in \open{}, as required.
 \end{proof}
-The implication of Lemma~\ref{the:lazy-minf-correct} is that 
-both Lazy \kastarmin{} and Eager \kastarmin{} expand states according to their $F^u$ values, 
-except that Lazy \kastarmin{} does so more efficiently, without the need to reorder all the states in \open{}. However, the exact set of states they expand may be different due to tie breaking. 
-For example, consider a tie-breaking rule that prioritizes states 
-where the of their $f$ values is lower, 
-and assume we have two states in \open{}, $n_1$ and $n_2$, 
-$\mathbf{f}$ values (5,6,10) and (5,7,7), respectively. 
-They have the same \minf{} values (5), but according to this tie-breaking rule
-\kastarmin{} will chose $n_2$ before $n_1$. Now, assume that $g_3$ was expanded. 
-Using Eager \kastarmin{} would result in $n_1$ now being expanded before $n_2$, 
-while Lazy \kastarmin{} would not do so. Since tie-breaking rules 
-can be useful in practice, this means that Eager \kastarmin{} may still outperform Lazy \kastarmin{}. 
-In our experimental results, however, this did not occur and Lazy \kastarmin{} was in general better. 
+
+The implication of Lemma~\ref{the:lazy-minf-correct} is that both Lazy
+\kastarmin{} and Eager \kastarmin{} expand states according to their $F^u$
+values, except that Lazy \kastarmin{} does so more efficiently, without the
+need to reorder all the stale states in \open{}. 
+% [[AF: So you do reorder the entire open list. with Eager. Or do you only insert these nodes that their F values was changed?]]
+However, the exact set of states they expand may be different
+due to tie breaking. For example, consider a tie-breaking rule that prioritizes
+states for which the sum of their $f$ values is smaller, and assume we have two
+states in \open{}, $n_1$ and $n_2$, with $\mathbf{f}$ values (5,6,10) and
+(5,7,7), respectively. They have the same \minf{} values (5), but according to
+this tie-breaking rule \kastarmin{} will chose $n_2$ before $n_1$. Now, assume
+that $g_3$ was expanded. Using Eager \kastarmin{} would result in $n_1$ now
+being expanded before $n_2$, while Lazy \kastarmin{} would not do so. Since
+tie-breaking rules can be useful in practice, this means that Eager
+\kastarmin{} may still outperform Lazy \kastarmin{}. In our experimental
+results, however, this did not occur and Lazy \kastarmin{} was in general
+better. %[[AF: Tie breaking can go either way. You might want to delete all this altogether]]\roni{I don't follow}
 
 
 % Lazy does not work for Max-f, but does work on Min-f
 \subsubsection{Lazy \kastarmax{}}
 
-%Using Lazy \kastarmin{} has significant impact [[AF: what do you mean, runs faster? explain why?]] in practice. Unfortunately, 
-Lemma~\ref{the:lazy-minf-correct} does not transfer to Lazy \kastarmax{}. 
-%Using the Lazy approach for \kastarmax{} does not have the same effect. 
+%Using Lazy \kastarmin{} has significant impact [[AF: what do you mean, runs faster? explain why?]] in practice. Unfortunately,
+Lemma~\ref{the:lazy-minf-correct} does not transfer to Lazy \kastarmax{}.
+%Using the Lazy approach for \kastarmax{} does not have the same effect.
 In fact, we show next that Lazy \kastarmax{} expands
-the same states as \kastarmax{} without reordering \open{} after a goal is expanded, 
-and thus it may expand states that do not have the lowest updated $F$ value in \open{}. 
+the same states as \kastarmax{} without reordering \open{} after a goal is expanded,
+and thus it may expand states that do not have the lowest updated $F$ value in \open{}.
 %[[AF: who is not doing the reordering. Ambiguous. Please precisely say what you mean]].
-%[[AF: recall? I do not remember anything??]] 
+%[[AF: recall? I do not remember anything??]]
 As discussed above (and shown in the example in Figure~\ref{fig:need-resort}), this is a negative
 result since it means that Lazy \kastarmax{} will be guided towards goals even
 after the optimal path to them has been found.
 % were already solved. %misinformed heuristics. % we cannot apply the lazy approach to \kastarmax{} and preserve admissibility.
 \begin{theorem}[Lazy \kastarmax{} is Ineffective]
-Lazy \kastarmin{} expands exactly the same set of states as \kastarmax{},
+Lazy \kastarmax{} expands exactly the same set of states as \kastarmax{},
 without reordering \open{}.
     \label{the:lazy-maxf-bad}
 \end{theorem}
@@ -983,7 +993,7 @@ without reordering \open{}.
     To prove Theorem~\ref{the:lazy-maxf-bad}, we show that Lazy \kastarmax{} never decides to re-insert the state it chooses from \open{}. Let $n$ be a state with the minimal $F$ value in \open.
     For Lazy \kastar{} to decide to re-insert $n$,  its $F$ value must be stale and after updating its $F$ value
     (from $F(n)$ to $F^u(n)$) then it will not have  the minimal $F$ value in \open{}.
-    We show now that this cannot occur. %below [[AF: you mean right now]] 
+    We show now that this cannot occur. %below [[AF: you mean right now]]
     Let $A$ be the set of active goals when
     $n$ was expanded, and let $A^u$ be the current set of active goals. Clearly, $A\subseteq A^u$.
     In \kastarmax{}, we have that $F(n)=$\maxf{}, which is the maximum of the heuristics for the active goals.
@@ -996,6 +1006,8 @@ without reordering \open{}.
 For the above reason, we only implemented for \kastarmax{} the two Eager approaches (Eager and Eager$^+$).
 
 %[[AF: not clear. You never used lazy? What two approaches. This entire section needs some more rewording as I said. I think I do want to see this section 5 again.]]
+
+%[[AF:  As I said above, I think we only need eager and the exact implementation is less important. That is, I do not like the term eager+. Your call]]
 
 \section{Theoretical Analysis}
 \label{sec:theoretical-analysis}
@@ -1025,8 +1037,8 @@ To analyze the relationship between Exp(\kxastar{}), Exp(\kastarmin), and Exp(\k
     $\tuple{G,s, \textbf{g}}$
 \label{def:surplus-k-goal}
 \end{definition}
-By definition, \kxastar{} never expands any surplus states and always expands 
-all surely necessary states. 
+By definition, \kxastar{} never expands any surplus states and always expands
+all surely necessary states.
 
 
 \begin{theorem}
@@ -1044,62 +1056,76 @@ all surely necessary states.
 
     {\bf All surely necessary states.} Again, we prove this by negation. Let $n$ be a state
     that is surely necessary for goal $g_i$ but was not expanded by \kastarmin{}.
-    That is, $n$ is reachable from $s$ by a path of states with $f$ values lower than $opt_{\Pi_i}$
-    and $f_i(n)<opt_{\Pi_i}$. The $F$ values of the states along this path must also be lower than $opt_{\Pi_i}$ (since we are using \minf). Since all edges in the underlying graph are non-negative, then the $F$ value of a goal $g_i$ cannot be smaller than $opt_(\Pi_i)$. Thus, for $g_i$ to be expanded the minimal $F$ value must have been no less than $opt_{\Pi_i}$. Consequently, all the states along the path to $n$ and $n$ must have already been expanded.
+    That is, $n$ is reachable from $s$ by a path of states with $f_i$  values lower than $opt_{\Pi_i}$
+    and $f_i(n)<opt_{\Pi_i}$. The $F$ values of the states along this path must also be lower than
+$opt_{\Pi_i}$ (since we are using \minf). Since all edges in the underlying
+graph are non-negative, then $F(g_i)=opt_{\Pi_i}$. Hence, the minimal $F$ value in \open{} is $opt_{\Pi_i}$ when $g_i$ is expanded. Thus, all the states along the path to $n$ and $n$ itself must have already been expanded, as all of them have $f_i$ values smaller than $opt_{\Pi_i}$ and thus also have $F$ values smaller than $opt_{\Pi_i}=F(g_i)$.  
 \end{proof}
-An equivalent theorem for \kastarmax{} does not exists. In fact, there are cases where \kastarmax{} indeed expands surplus states. For example, consider the \kgs{} problem in Figure~\ref{fig:need-resort}. 
-State $n_2$ will be expanded first, having $F_{max}(n_2)=7$, followed by $n_1$ ($F_{max}(n_1)=8$), 
-$g_2$ ($F_{max}(g_2)=12$), and finally $g_2$ ($F_{max}(g_1)=15$). However, neither \astari{1} nor \astari{2} will expand $n_2$. Moreover, $n_2$ is surplus w.r.t both $\Pi_1$ and $\Pi_2$, 
-since the optimal path to $g_1$ and $g_2$ costs 6 and 3, respectively, while $f_1(n_2)=7>6$ and $f_1(n_2)=5>3$. 
+
+An equivalent theorem for \kastarmax{} does not exists. In fact, there are
+cases where \kastarmax{} indeed expands surplus states. For example, consider
+the \kgs{} problem in Figure~\ref{fig:need-resort}. State $n_2$ will be
+expanded first, having $F_{max}(n_2)=7$, followed by $n_1$ ($F_{max}(n_1)=8$),
+$g_2$ ($F_{max}(g_2)=12$), and finally $g_2$ ($F_{max}(g_1)=15$). However,
+neither \astari{1} nor \astari{2} will expand $n_2$. Moreover, $n_2$ is surplus
+w.r.t both $\Pi_1$ and $\Pi_2$, since the optimal path to $g_1$ and $g_2$ costs
+6 and 3, respectively, while $f_1(n_2)=7>6$ and $f_1(n_2)=5>3$.
 
 
-The practical implication of Theorem~\ref{the:kastarmin-effective} is that, up to tie breaking,
-\kastarmin{} and \kxastar{} expand the same set of states. More formally, 
-assume that both \kastarmin{} and \kxastar{} use the same tie-breaking function 
-to choose which state to expand among the states with the same $F$ and $f$ value, respectively. 
-A tie-breaking function induces a total order between states. Let $\prec$ denote 
-the total order induced by the tie-breaking function used by both \kastarmin{} and \kxastar{}. 
-Under these assumption, the following theorem holds. 
+The practical implication of Theorem~\ref{the:kastarmin-effective} is that, up
+to tie breaking, \kastarmin{} and \kxastar{} expand the same set of states.
+More formally, assume that both \kastarmin{} and \kxastar{} use the same
+tie-breaking function to choose which state to expand among the states with the
+same $F$ and $f$ value, respectively. [[AF: they have different knowledge, how
+can they practically use the same order unless they do not look on f-values but
+only look on the description of the state]] A tie-breaking function induces a
+total order between states. Let $\prec$ denote the total order induced by the
+tie-breaking function used by both \kastarmin{} and \kxastar{}. Under these
+assumption, the following theorem holds.
 
 \begin{theorem}
-	If the tie-breaking function used by Eager \kastarmin{} and \kxastar{} 
-	induce the same total order over states then 
-	\[Exp(\text{\kastarmin{}})=Exp(\text{\kxastar{}}) \]
-	\label{the:expanded-equal}
+    If the tie-breaking function used by Eager \kastarmin{} and \kxastar{}
+    induce the same total order over states then
+    \[Exp(\text{\kastarmin{}})=Exp(\text{\kxastar{}}) \]
+    \label{the:expanded-equal}
 \end{theorem}
-\begin{proof}	
-	Let \open$_X$ denote the open list of algorithm $X$. 
-	By negation, let $n$ be the first state \kastarmin{} expands that 
-	is not expanded by any of the $k$ individual \astar{}s. 
-	This means that before expanding $n$
-	\begin{equation}
-	\open{}_{\text{\kastarmin{}}}=\bigcup_{i=1}^k \open_{\text{\astari{i}}}
-	\label{eq:union-of-open}
-	\end{equation}
-	$n$ was selected for expansion, so it has the minimal $F_{min}$ value
-	in \open{}$_{\text{\kastarmin{}}}$. Let $g_i$ be the responsible goal for $n$, 
-	i.e., a goal for which $f_i(n)=F_{min}(n)$. 
-	Since we assume that $n$ was not expanded by any of the $k$ 
-	\astar{} searches, it must have also not been expanded by \astari{i}. 
-This means there exists $n'\in\open_{\text{\astari{i}}}$ for which either $f_i(n')<f_i(n)$
-or $n'\prec n$. Due to Equation~\ref{eq:union-of-open}, we have that $n'$ is in \open{}$_{\text{\kastarmin{}}}$, 
-and therefore neither of these conditions can hold, or else $n'$ was selected for expansion before $n$.
+\begin{proof}
+    Let \open$_{X,t}$ denote the open list of algorithm $X$ at iteration $t$. 
+    By negation, let $t$ be the first \kastarmin{} iteration in which it expands
+    a state that is not expanded by any of the $k$ individual \astar{}s, and let $n$ be that state. This means that there exists $t_1,\ldots,t_k$ such that before expanding $n$
+    \begin{equation}
+    \open{}_{\text{\kastarmin{}}}=\bigcup_{i=1}^k \open_{\text{\astari{i}},t_i}
+    \label{eq:union-of-open}
+    \end{equation}
+    That is, since until this iteration \kastarmin{} only expanded states 
+    that were expanded by at least one of the individual \astar{}s then 
+    $\open{}_{\text{\kastarmin{}}}$ is the union of the open lists of the individual \astar{}s
+    at some iteration of their search. 
+    Since $n$ was selected for expansion, it has the minimal $F_{min}$ value
+in \open{}$_{\text{\kastarmin{}}}$. Let $g_i$ be the responsible goal for $n$,
+i.e., a goal for which $f_i(n)=F_{min}(n)$.
+Since we assume that $n$ was not expanded by any of the $k$
+\astar{} searches, it must have also not been expanded by \astari{i}.
+This means there exists $n'\in\open_{\text{\astari{i}},t_i}$ for which either $f_i(n')<f_i(n)$
+or $n'\prec n$. Due to Equation~\ref{eq:union-of-open}, we have that $n'$ is in \open{}$_{\text{\kastarmin{}}}$,
+and therefore neither of these conditions can hold, or else $n'$ was selected for expansion before $n$. Thus, \astari{i} must have expanded $n$ at iteration $t_i$
 \end{proof}
-
-
+Note that while every tie-breaking function used by the individual \astar{} searches 
+can be trivially applied in \kastarmin{}, the reverse is not necessarily true. In fact, \kastarmin{} may employ a tie-breaking mechanism that is more informed 
+than those used by the individual \astar{} searches, as it has more knowledge about the overall \kgs{} problem. 
 
 
 % Memory=generated
 \subsection{Memory Requirements}
 The number of states expanded is directly related to the number of generated
-states,\footnote{If $b$ is the branching factor then there are $b$ times more
-    generated states than expanded states.} which in turn is related to the memory
-requirements of \astar{} and \kastar{}. In general, search
-algorithms that store all the generated states in \open{} and in \closed{}, 
-such as \astar{} and \kastar{}, are memory intensive. While other
-implementations are also possible, where only the states in \open{} and their
-predecessors are stored~\cite{zhou2006breadth,korf2004best} or where the states
-are stored in external
+states,\footnote{If $b$ is the branching factor then there are $b$ times
+more generated states than expanded states.} which in turn is related to the
+memory requirements of \astar{} and \kastar{}. In general, search algorithms
+that store all the generated states in \open{} and in \closed{}, such as
+\astar{} and \kastar{}, are memory intensive. While other implementations are
+also possible, where only the states in \open{} and their predecessors are
+stored~\cite{zhou2006breadth,korf2004best} or where the states are stored in
+external
 memory~\cite{zhou2004structured,edelkamp2016external,edelkamp2005external}, we
 focus our analysis on the more common implementation of \astar{} in which all
 generated states are stored in memory for the entire duration of the search.
@@ -1109,13 +1135,14 @@ proportional to the number of (distinct) states generated times the memory
 required to store a single state.
 %Without loss of generality, assume that each state requires one memory units to store and denote by Gen($X$) the set of states generated by algorithm $X$. From Observation~\ref{obs:expandedStates}, we can bound the memory required to run \kastarmin{} as follows:
 In our analysis we make the simplifying assumption that each state requires one
-memory unit to store for all algorithms. \footnote{This assumption is not
+memory unit to store for all algorithms.\footnote{This assumption is not
 exactly correct in practice, since in \kastar{} we store for a state a vector
 of $k$ values ($\textbf{f}(n)=(f_1,\ldots,f_k)$)  while in \astar{} we only
 store a single value. Nonetheless, we justify our assumption for cases where
 the memory required to store the state details is significantly larger than
 these $k$ values.} Hence, if Mem($X$) and Gen($X$) denotes the memory required
-and the set of states generated when running algorithm $X$, respectively, then, up to tie-breaking between states with the same $F$ value, it holds that:
+and the set of states generated when running algorithm $X$, respectively, then,
+up to tie-breaking between states with the same $F$ value, it holds that:
 \begin{align}
 Mem(\text{\kxastar{}})&=\max_{j\in [1,k]}| Gen(\text{\astari{j}})| \label{eq:kxastar-mem}\\
 Mem(\text{\kastarmin{}})&=|\bigcup_{j\in [1,k]} Gen(\text{\astari{j}})| \label{eq:kastar-mem}\\
@@ -1123,8 +1150,8 @@ Mem(\text{\kxastar{}})&\leq Mem(\text{\kastarmin{}}) \leq \sum_{j\in[1,k]} Mem(\
 \end{align}
 
 The correctness of Equations~\ref{eq:kxastar-mem}-\ref{eq:kxastar-kastar-mem}
-is now established. Since \kxastar{} runs the $k$ searches individually, there is
-no need to store the states generated by \astari{i} when running \astari{j}.
+is now established. Since \kxastar{} runs the $k$ searches individually, there
+is no need to store the states generated by \astari{i} when running \astari{j}.
 Thus, to run \kxastar{} we require memory sufficient to run each \astari{i}
 individually (Equation~\ref{eq:kxastar-mem}). In \kastarmin{} we expand the
 same set of states as \kxastar{} and thus generate the same set of states, but
@@ -1137,22 +1164,22 @@ cannot be larger than their sum (Equations~\ref{eq:kxastar-kastar-mem}). Note
 that these bounds are tight, in the sense that there are $k$-goal problems
 where $Mem(\text{\kxastar{}}) = Mem(\text{\kastarmin{}})$ and other $k$-goal
 problems where $Mem(\text{\kastarmin{}}) = \sum_{j\in[1,k]}
-Mem(\text{\astari{j}})$. For example, in a 2-goal instance,
-if $Gen(\text{\astari{1}})\subset Gen(\text{\astari{2}})$ then
-$Mem(\text{\kxastar{}}) = Mem(\text{\kastarmin{}})$
-while if $Gen(\text{\astari{1}})\cap Gen(\text{\astari{2}})=\{s\}$ then
-$Mem(\text{\kastarmin{}}) = \sum_{j\in[1,k]}
-Mem(\text{\astari{j}})$.
+Mem(\text{\astari{j}})$. For example, in a 2-goal instance, if
+$Gen(\text{\astari{1}})\subset Gen(\text{\astari{2}})$ then
+$Mem(\text{\kxastar{}}) = Mem(\text{\kastarmin{}})$ while if
+$Gen(\text{\astari{1}})\cap Gen(\text{\astari{2}})=\{s\}$ then
+$Mem(\text{\kastarmin{}}) = \sum_{j\in[1,k]} Mem(\text{\astari{j}})-1$, 
+where the minus one is for the start state. %[[AF:Except for the start state]]
 
 \subsection{Runtime Analysis}
 
 Now we analyze the expected runtime of the proposed \kgs{} algorithms. As shown
 above theoretically and will be shown later experimentally, \kastarmin{} is
 almost always superior to \kastarmax{}, and thus the focus of our analysis is a
-comparison between \kxastar{} and \kastarmin{} (denoting the latter as simply \kastar{} throughout this section).  While both algorithms generate
-the same set of states (Observation~\ref{obs:expandedStates}), their runtime
-differ due to the number of times each state is generated and the cost of these
-generations.
+comparison between \kxastar{} and \kastarmin{} (denoting the latter as simply
+\kastar{} throughout this section).  While both algorithms generate the same
+set of states (Theorem~\ref{the:expanded-equal}), their runtime differ due to the number of times each state is
+generated and the cost of these generations.
 
 
 
@@ -1200,33 +1227,39 @@ where Time($X$) denote the runtime of algorithm $X$.
 
 \subsubsection{Runtime of \kastar{}}
 
-To analyze the runtime of \kastar{}, a deeper analysis is needed. In addition to node generation ($C_{gen}$) and heuristic computation ($C_h$), in \kastar{} we also have the cost of reordering \open (either Eagerly or Lazily), which incurs $C_r$ for every state in \open{}.
-Next, we consider the number of
-times each of the costs components -- node generation ($C_{gen}$), heuristic computation ($C_h$), and state reordering ($C_r$) -- is incurred.
+To analyze the runtime of \kastar{}, a deeper analysis is needed. In addition
+to node generation ($C_{gen}$) and heuristic computation ($C_h$), in \kastar{}
+we also have the cost of reordering \open\ (either Eagerly or Lazily), which
+incurs $C_r$ for every state in \open{}. Next, we consider the number of times
+each of the costs components -- node generation ($C_{gen}$), heuristic
+computation ($C_h$), and state reordering ($C_r$) -- is incurred.
 
 \noindent {\bf Node generation} ($C_{gen}$). Every generated state incurs
 $C_{gen}$ exactly once. Thus, state generation contributes to the overall runtime of \kastarmin{}:
 \[
-|Gen_k(\text{\kastar{}})|\cdot C_{gen} =
+|Gen(\text{\kastar{}})|\cdot C_{gen} =
 |\bigcup_{i\in{\{1,k\}}} Gen(\text{\astari{i}})|\cdot C_{gen}
   \displaystyle
 \]
-\noindent {\bf Heuristic computation} ($C_{h}$).
-Until the first goal is expanded, \kastar{} computes $k$ heuristics,
-then, until the second is expanded, \kastar{} computes $k-1$ heuristics, and so on.
-So, $|Gen_k(1)|$ states are generated with $k$ heuristics,
-$|Gen_{k}(2)|-|Gen_{k}(1)|$ states are generated with $k-1$ heuristics,
-$|Gen_{k}(3)|-|Gen_{k}(2)|$ states are generated with $k-2$ heuristics,
-and so on.
-Summing all this, we have that in \kastarmin{}, heuristic computations add to the overall runtime:
+\noindent {\bf Heuristic computation} ($C_{h}$). 
+Let $Gen_i(\text{\kastar{}})$ denote the set of states generated by \kastar{} until goal $g_i$ is expanded. 
+Until the first goal is
+expanded, \kastar{} computes $k$ heuristics. Then, until the second is
+expanded, \kastar{} computes $k-1$ heuristics, and so on. 
+So, $|Gen_1(\text{\kastar{}})|$ states are generated with
+$k$ heuristics, 
+$|Gen_2(\text{\kastar{}})|-|Gen_1(\text{\kastar{}})|$ states are generated with $k-1$
+heuristics, $|Gen_3(\text{\kastar{}})|-|Gen_2(\text{\kastar{}})|$ states are generated with $k-2$
+heuristics, and so on. Summing all this, we have that 
+heuristic computations add to the overall runtime of \kastarmin{}:
 \begin{align*}
-    C_h\cdot k \cdot & (|Gen_k(1)| \\
-     + k \cdot&(|Gen_k(2)|-|Gen_k(1)|)\\
-     + (k-1) \cdot&(|Gen_k(3)|-|Gen_k(2)|) \\
+    C_h\cdot ( k \cdot & (|Gen_1(\text{\kastar{}})| \\
+     + (k-1) \cdot&(|Gen_2(\text{\kastar{}})|-|Gen_1(\text{\kastar{}})|)\\
+     + (k-2) \cdot&(|Gen_3(\text{\kastar{}})|-|Gen_2(\text{\kastar{}})|) \\
      &\ldots\\
      %+ 2 \cdot&(|Gen_k(k-1)|-|Gen_k(k-2)|) \\
-     + 1 \cdot&(|Gen_k(k)|-|Gen_k(k-1)|))\\
-     =&\sum_{i\in[1,k]} |Gen_k(i)|\cdot C_h
+     + 1 \cdot&(|Gen_k(\text{\kastar{}})|-|Gen_{k-1}(\text{\kastar{}})|)))\\
+     =& C_h \cdot \sum_{i\in[1,k]} |Gen_i(\text{\kastar{}})|
 \end{align*}
 
 %\[=\sum_{i\in[1,k]} |Gen_k(i)|\cdot C_h\]
@@ -1238,47 +1271,32 @@ Summing all this, we have that in \kastarmin{}, heuristic computations add to th
 
 \noindent {\bf Reordering of \open{}} ($C_r$).
 %\open{} gets reordered after every goal is found (except for the last goal).
-It is difficult to analyze exactly the runtime incurred due to these reordering operations performed by the \kastar{} variants (Eager, Eager$^+$, and Lazy). 
-Thus, perform here only a rough analysis of the overhead incurred by reordering \open{} in Eager \kastarmin{}. This is intended to serves as an upper bounding approximation of the reodering overhead of Eager$^+$ and Lazy \kastarmin{}. 
+
+It is difficult to exactly analyze the runtime incurred due to these reordering
+operations performed by the \kastar{} variants (Eager, Eager$^+$, and Lazy).
+Thus, we perform here only a rough analysis of the overhead incurred by
+reordering \open{} in Eager \kastarmin{}. This is intended to serves as an
+upper bound approximation of the reordering overhead of Eager$^+$ and Lazy
+\kastarmin{}.
 
 
-Let $\open{}_i(X)$ denote the number of
-states in \open{} when algorithm $X$ expanded goal $g_i$, and let $C_r$ be the cost
-of re-computing the $F$ value (using either \minf{} or \maxf{}) for a state 
-and updating its position in \open{} accordingly. 
-Without loss of generality, assume that $g_i$ is the  $i^{th}$ goal that has
-been found. After $g_i$ was expanded, there are $\open{}_i(\text{\kastar{}})$ states in \open{}. 
-Thus, the total computational cost
-incurred by Eager \kastar{} due to recomputing $F$ values and reordering \open{} accordingly 
-after every goal is expanded is
+Let $\open{}_i(X)$ denote the number of states in \open{} when algorithm $X$
+expanded goal $g_i$, and let $C_r$ be the cost of re-computing the $F$ value
+(using either \minf{} or \maxf{}) for a state and updating its position in
+\open{} accordingly. Without loss of generality, assume that $g_i$ is the
+$i^{th}$ goal that has been found. After $g_i$ was expanded, there are
+$\open{}_i(\text{\kastar{}})$ states in \open{}. Thus, the total computational
+cost incurred by Eager \kastar{} due to recomputing $F$ values and reordering
+\open{} accordingly after expanding  all the goals is
 \begin{equation}
 C_{eager}=\sum_{i=1}^{k-1} \open{}_i(\text{\kastar{}}) \cdot C_r
 \label{eq:re-sort-cost}
 \end{equation}
 
 
-
-\begin{table}
-    \begin{tabular}{|l|l|l|}
-        \hline
-        Cost        & \kxastar{}                                    & \kastarmin \\ \hline
-        $C_{gen}$   & $\sum\limits_{i\in[1,k]} |Gen(\text{\astari{i}})|$       & * $|\bigcup\limits_{i\in[1,k]} Gen(\text{\astari{i}})|$\\
-        $C_{h}$     & * $\sum\limits_{i\in[1,k]} |Gen(\text{\astari{i}})|$     & $\sum\limits_{i\in[1,k]} |Gen_k(\text{\kastar{}})|$\\
-        $C_r$       & *  0                                               & $\sum_{i=1}^{k-1} \open{}_i(\text{\kastar{}}) \cdot C_r$\\
-        \hline
-    \end{tabular}
-       \caption{Analysis of the computational costs incurred by \kxastar{} and \kastarmin{}.}
-       % when solving a \kgs{} problem with arbitrary $k$.  Some costs are incurred the same or less in one algorithm than the other. Such cases are marked with an asterisk.}
-   \label{tab:time-analysis}
-\end{table}
-
-
-Table~\ref{tab:time-analysis} summarizes the above analysis, comparing the
-runtimes of \kxastar{} and \kastarmin{}. Each row represents one of the
-computational costs factors ($C_{gen}$, $C_{h}$, and $C_{r}$),
-showing the contribution of that computational cost factor to the overall
-runtime for the compared algorithms. To show the usefulness of the above
-analysis, we consider some special cases.
+\subsubsection{Practical Implications}
+To show the usefulness of the above runtime analysis, we  consider some special
+cases, e.g.,  where one of the costs ($C_{gen}$, $C_{h}$, and $C_{r}$) dominates others:
 \begin{itemize}
     \item {\bf Case 1: State generation cost is dominant.} ($C_{gen}>>C_{h}+C_r$)
     If this case, the preferred algorithm is \kastar{}. To show this,
@@ -1287,22 +1305,46 @@ analysis, we consider some special cases.
     The advantage of \kastarmin{} grows with the size of the intersection between the sets $Gen(\text{\astari{i}})$ for $i\in[1,k]$.
 
     \item {\bf Case 2: Heuristic computation is dominant.} ($C_{h}>>C_{gen}+C_r$)
-    If this is the case, the preferred algorithm is \kxastar{}. Again, to show this we look to Table~\ref{tab:time-analysis} and see that \kxastar{} computes a heuristic function
+    If this is the case, the preferred algorithm is \kxastar{}. Again, to show this we look at
+     Table~\ref{tab:time-analysis} and see that \kxastar{} computes a heuristic function
     $\sum_{i\in[1,k]} |Gen(\text{\astari{i}})|$ times, while
     \kastar{} computes the heuristic $\sum_{i\in[1,k]} |Gen_i(\text{\kastar})|$ times.
     Importantly, for every $i$ it holds that $|Gen_i(\text{\kastar})|\geq |Gen(\text{\astari{i}})|$
     because $Gen_i(\text{\kastar})$ contains all the states in $Gen(\text{\astari{i}})$
     and states associated with the search for the other goals
     (those states that \astari{i} would not generate but some of other individual \astar{} searches would) that happen to have been added to \open{} at this stage.
-    
-   \item {\bf Case 3: Distant Goals.} ($|\bigcap_{i\in[1,k] Gen(\text{\astari{i}})}|\approx 1$) 
-   If the goals are far away from each other in the state space, 
-   then we expect most states to be generated by only one of the $k$ searches. 
+
+   \item {\bf Case 3: Distant Goals.} ($|\bigcap_{i\in[1,k] Gen(\text{\astari{i}})}|\approx 1$)
+   If the goals are far away from each other in the state space,
+   then we expect most states to be generated by only one of the $k$ searches.
    In such a case, $\sum_{i\in[1,k]}|Gen(\text{\astari{i}})|\approx |\bigcup\limits_{i\in[1,k]} Gen(\text{\astari{i}})|$
-   and therefore we expect \kastar{} to be less effective. 
+   and therefore we expect \kastar{} to be less effective.
 \end{itemize}
 
 
+
+
+\begin{table}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		Cost        & \kxastar{}                                    & \kastarmin \\ \hline
+		$C_{gen}$   & $\sum\limits_{i\in[1,k]} |Gen(\text{\astari{i}})|$       & \newcode{$|\bigcup\limits_{i\in[1,k]} Gen(\text{\astari{i}})|$}\\
+		$C_{h}$     & \newcode{$\sum\limits_{i\in[1,k]} |Gen(\text{\astari{i}})|$}    & $\sum\limits_{i\in[1,k]} |Gen_i(\text{\kastar{}})|$\\
+		$C_r$       & \newcode{0}                                               & $\sum_{i=1}^{k-1} \open{}_i(\text{\kastar{}}) \cdot C_r$\\
+		\hline
+	\end{tabular}
+	\caption{Analysis of the computational costs incurred by \kxastar{} and \kastarmin{}.}
+	% when solving a \kgs{} problem with arbitrary $k$.  Some costs are incurred the same or less in one algorithm than the other. Such cases are marked with an asterisk.}
+	\label{tab:time-analysis}
+\end{table}
+
+
+Table~\ref{tab:time-analysis} provides a summary of our runtime analysis, comparing the
+runtimes of \kxastar{} and \kastarmin{}. Each row represents one of the
+computational costs factors ($C_{gen}$, $C_{h}$, and $C_{r}$), showing the
+contribution of that computational cost factor to the overall runtime for the
+compared algorithms. 
+We highlight the smaller value in each row by coloring it in blue and adding a ``[+]'' sign. This is intended to provide a higher-level view of the outcome of our analysis: if one of the costs factors is particularly high then the algorithm that minimizes the times this cost is incurred is expected to be faster. %algorithm that [[AF: why do you have stars inside the figure. Do you wantto delete them?]]
 
 %We denote this extra cost by $C_{eager}$.  $C_{eager}$ can be negligible compared to the overall runtime of \kastar{}.  For example, consider \kgs{} problems where the goals are not very close to each other  and the frontier of the search grows exponentially.  In such cases, the number of states generated after the $k-1$ goal is expanded  is larger than the number of states generated before that.  Now, observe that every state generated by \kastar{} incurs a computational cost of $C_{gen}$,  which is larger than $C_r$ because $C_{gen}$ includes the costs of  computing the $F$ value and inserting into \open{} like $C_r$, and also the costs  costs of creating the data-structure for representing the generated state and performing duplicate detection.  Thus, in such cases the overhead of reordering \open{} after each of the $k-1$ goals have been expanded, is negligible. Put more formally, let $Gen_i(\text{\kastar{}})$ to denote the set of states generated by \kastar{} until goal $g_i$ is expanded. Since the search frontier grows exponentially,  $\sum_{i=1}^{k-1}|Gen_i(\text{\kastar{}})|<|Gen_k(\text{\kastar{}})|$. Clearly,  $\open{}_i(\text{\kastar{}})<|Gen_i(\text{\kastar{}})|$ and as we explained above $C_r<C_{gen}$,  and so $C_{eager}<|Gen_k(\text{\kastar{}})|\cdot C_{gen}$. The runtime of \kastar{} consists of generating all the states in the search and performing other operations, and so $C_{eager}$ is smaller. See a more detailed analysis of the runtime of \kastar{} in Section~\ref{sec:theoretical-analysis}.
 
@@ -1312,20 +1354,21 @@ analysis, we consider some special cases.
 
 %In this section we compared empirically the performance of the four \kgs{} algorithms we discussed: $k$ \astar{} searches (Section~\ref{sec:k-one-goal}), two versions of \kastar{} (Section~\ref{sec:one-k-goal-search}): \kastarmax{} and \kastarmin{}, and Lazy \kastar{} with \minf{} (Section~\ref{sec:lazy}). We also compared these heuristic search algorithms with uniform cost search.
 
-In this section we compared empirically the performance of the four \kgs{}
+In this section we compare empirically the performance of the four \kgs{}
 algorithms we discussed: \kxastar{} (Section~\ref{sec:k-one-goal}),
-\kastarmax{} and \kastarmin{}(Section~\ref{sec:one-k-goal-search}), and Lazy
-\kastarmin{}. A fifth algorithm is {\em uniform cost search} (UCS) (also known
-as Dijkstra's algorithm) which is a best first search without a heuristic,
-i.e., it prioritize nodes based on their $g$ values only.
+\kastarmax{} (Eager and Eager$^+$) and
+\kastarmin{}(Section~\ref{sec:one-k-goal-search}) (Eager, Eager$^+$ and Lazy).
+A fifth algorithm is {\em uniform cost search} (UCS) (also known as Dijkstra's
+algorithm) which is a best first search without a heuristic, i.e., it
+prioritize nodes based on their $g$ values only.
 
 
 We evaluated these algorithms on two domains: the pancake puzzle and path
 finding in grids from the Dragon Age video game from the movingai
 repository~\cite{sturtevant2012benchmarks}. These two domains represent
 different types of search problems. The pancake puzzle is an {\em exponential
-domain}, i.e., the state space graph is exponential in the size of the state,
-and is given implicitly by a start state and a set of state transition
+domain}, i.e., the state space graph grows exponentially with the depth of the
+search and is given implicitly by a start state and a set of state transition
 operators. The grid pathfinding domain is a {\em polynomial domain}, i.e., the
 entire state space graph is given as input. %, and so the runtime of a single path finding search is polynomial in the problem input (the graph).
 
@@ -1334,9 +1377,12 @@ entire state space graph is given as input. %, and so the runtime of a single pa
 %\roni{Meir: what was the heuristic used? how were the states generated? how many instances?}
 
 
-In the following experiment we used the {\tt ost001d} grid path finding map from the
-the movingai repository~\cite{sturtevant2012benchmarks}, which has approximately 10,500 grid cells.
-As a heuristic we experimented with the Octive distance heuristic and the Differential Heuristic~\cite{goldberg2005computing,ng2002predicting,sturtevant2009memory}. We focus first on the experiments performed with the simpler Octile heuristic.
+In the following experiment we used the 8-connected {\tt ost001d} grid path
+finding map from the the movingai repository~\cite{sturtevant2012benchmarks},
+which has approximately 10,500 grid cells. As a heuristic we experimented with
+the Octile distance heuristic and the Differential
+Heuristic~\cite{goldberg2005computing,ng2002predicting,sturtevant2009memory}.
+We focus first on the experiments performed with the simpler Octile heuristic.
 
 \subsubsection{The Impact of Varying the Number of Goals}
 
@@ -1391,23 +1437,60 @@ As a heuristic we experimented with the Octive distance heuristic and the Differ
 
 
 
-In the first batch of experiments we investigated the impact of increasing the number of goals.
-We experimented with 2, 4, 8, 16, 32, 64, and 128 number of goals ($k$).
-For each of value of $k$ (number of goals) we randomly generate 100 problem instances where in every instance the start state and the $k$ goal states were selected randomly.
-The average number of generated states and the average runtime in milliseconds are given in Tables~\ref{tab:pathfinding-generated} and~\ref{tab:pathfinding-runtime}, respectively.
-In every row of these tables, we highlighted the best result in bold. %The two columns denoted ``Eager$^+$'' represent the Smart Eager versions for \kastarmin{} and for \kastarmax{} (see Section~\ref{sec:smart-eager}).
+
+In the first batch of experiments we investigated the impact of increasing the
+number of goals. We experimented with 2, 4, 8, 16, 32, 64, and 128 number of
+goals ($k$). For each of value of $k$ (number of goals) we randomly generated
+100 problem instances where in every instance the start state and the $k$ goal
+states were selected randomly. The average number of generated states and the
+average runtime in milliseconds are given in
+Tables~\ref{tab:pathfinding-generated} and~\ref{tab:pathfinding-runtime},
+respectively. In every row of these tables, we highlighted the best result in
+bold.
+
+%The two columns denoted ``Eager$^+$'' represent the Smart Eager versions for \kastarmin{} and for \kastarmax{} (see Section~\ref{sec:smart-eager}).
 
 
-Consider the results in Table~\ref{tab:pathfinding-generated},
-which shows the average number of states generated for each algorithm until it halts. Note that this is not the number of {\em unique} states generated, so if a state is generated several times this will count as several state generations.
-one clear trend is that Lazy \kastarmin{} generates, in general, the same or fewer states than all other approaches.
-This follows our analysis in Section~\ref{sec:theoretical-analysis}. \kastarmin{} generates fewer states than \kxastar{} because it generates the same set of states as \kastar{} but \kxastar{} may generate a state multiple times when searching for multiple goals. \kastar{} also generates fewer states than \kastarmax{}, as \kastarmax{} may expand surplus states (as discussed in Section~\ref{sec:expandedStates}). Clearly, \kastar{} generates fewer states than UCS, as UCS does not use any heuristic.
+Consider the results in Table~\ref{tab:pathfinding-generated}, which shows the
+average number of states generated for each algorithm until it halts. Note that
+this is not the number of {\em unique} states generated, so if a state is
+generated several times this will
+count as several state generations. 
+%[[AF: This is only true for KxA*. Right?]]
+One clear trend is that Lazy \kastarmin{}
+generates, in general, the same or fewer states than all other approaches. This
+follows our analysis in Section~\ref{sec:theoretical-analysis}. \kastarmin{}
+generates fewer states than \kxastar{} because it generates the same set of
+states as \kastar{} but \kxastar{} may generate a state multiple times when
+searching for multiple goals. \kastarmin{} also generates fewer states than
+\kastarmax{}, as \kastarmax{} may expand surplus states (as discussed in
+Section~\ref{sec:expandedStates}). Clearly, all versions of \kastar{} generate
+fewer states than UCS, as UCS does not use any heuristic.
 
-Comparing the results for Eager, Eager$^+$, and Lazy in both \kastarmax{} and \kastarmin{}, we observe, as expected, that Eager and Eager$^+$ generate exactly the same set of states. Indeed, the differences between them is only manifested in the runtime, which is discussed below. The differences between Lazy \kastarmin{} and the other versions of \kastarmin{} are negligible, and results from having different states in \open{} and consequently ties in $F$ values were broken differently.
+Comparing the results for Eager, Eager$^+$, and Lazy in both \kastarmax{} and
+\kastarmin{}, we observe, as expected, that Eager and Eager$^+$ generate
+exactly the same set of states. Indeed, the differences between them is only
+manifested in the runtime, which is discussed below. The differences between
+Lazy \kastarmin{} and the other versions of \kastarmin{} are negligible, and
+results from having different states in \open{} and consequently ties in $F$
+values were broken differently.
 
 
-Now, observe the average runtime results in Table~\ref{tab:pathfinding-runtime}.
-There are several interesting trends to observe here. First, we clearly see that while we observed before that Lazy \kastarmin{} generated fewer nodes than the other algorithms, it is not always the fastest. Up to 16 goals, it is safe to say that Lazy \kastarmin{} is either the fastest or on par with the other \kastarmin{} variants. However, as the number of goals increases beyond 32, the fastest algorithm is actually UCS. To explain this, consider the most extreme case, where we every state is a goal. In this case, clearly UCS will be the most effective, as it will expand every state at most once and will never spend any time on computing a heuristic value. By contrast, \astar{} and \kastar{} will compute at least one heuristic for every state, and most likely will compute even more heuristics per state. This heuristic computation time is not spent by UCS. Thus, the benefit of using a heuristic diminishes as the number of goals increase, eventually resulting in UCS outperforming all other searches for large values of $k$. %number of goals.
+Next, consider the average runtime results in
+Table~\ref{tab:pathfinding-runtime}. We observe several interesting trends.
+First, while Lazy \kastarmin{}
+generated fewer nodes than the other algorithms (as shown in Table~\ref{tab:pathfinding-generated}), it is not always the fastest.
+Up to 16 goals, it is safe to say that Lazy \kastarmin{} is either the fastest
+or on par with the other \kastarmin{} variants. However, as the number of goals
+increases beyond 32, the fastest algorithm is UCS. To explain this, consider
+the most extreme case, where every state is a goal. In this case, clearly UCS
+will be the most effective, as it will expand every state at most once and will
+never spend any time on computing a heuristic value. By contrast, \astar{} and
+\kastar{} will compute at least one heuristic for every state, and most likely
+will compute even more heuristics per state. This heuristic computation time is
+not spent by UCS. Thus, the benefit of using a heuristic diminishes as the
+number of goals increase, eventually resulting in UCS outperforming all other
+searches for large values of $k$.
 
 
 %constantly performs better of the same as \kastarmin{} and \kastarmax{}. Second, we see that for every $k>1$, all version of \kastar{} outperforms \kxastar{}. Third, we see that as the number of goals becomes very large, UCS becomes the best algorithm. To explain this, consider the most extreme case, where we every state is a goal. In this case, clearly UCS will be the most effective, as it will expand every state at most once and will never spend any time on computing a heuristic value. By contrast, \astar{} and \kastar{} will compute at least one heuristic for every state, and most likely will compute even more heuristics per state. This heuristic computation time is not spent by UCS. Thus, as we see in the results the benefit of using a heuristic diminishes as the number of goals increase, resulting in UCS outperforming all other searches.
@@ -1415,17 +1498,38 @@ There are several interesting trends to observe here. First, we clearly see that
 
 \begin{figure}
     \includegraphics[width=\columnwidth]{min-vs-max}
-    \caption{An example of running \kastarmin{} (left) and with \kastarmax{} (right). The yellow parts represent the states in \open{}, the brown parts represent the states in \closed{}. 
+    \caption{An example of running \kastarmin{} (left) and with \kastarmax{} (right). The yellow parts represent the states in \open{}, the brown parts represent the states in \closed{}.
     To see a running example of how \open{} changes throughout the search in  this example see the vidoes in the following URLs \url{http://tinyurl.com/ze29tb4} (for \kastarmax) and
     \url{http://tinyurl.com/zawrmtd} (for \kastarmin).
 }
     \label{fig:min-vs-max}
 \end{figure}
 
-An interesting observation is that \kastarmax{} is faster than Eager \kastarmin{}
-when the number of goals is large (see $k=64$ and $128$). To explain this, consider the illustrations in Figure~\ref{fig:min-vs-max}. They show an example of running \kastarmin{} (left) and \kastarmax{} (right) on the same \kgs{} instance. The yellow points represent states in \open{}, the brown points represent states in \closed{}, the graph points are states that were not generated so far, and the white points and the black points are impassable obstacles. As can be seen, the behavior of \kastarmin{} and \kastarmax{} are different: \kastarmin{} runs greedily towards prospective goals, showing clear trajectories protruding from the search frontier, while \kastarmax{} demonstrates a behavior that is more similar to uniform cost search. This occurs  because when a child is generated in \kastarmin{}, if it is closer to the closest goal than its parent then it will be expanded next, resulting in these protruding trajectories towards the goal. By contrast, in \kastarmax{} even if a state generates a child state that is closer to the closest goal, it still may not be expanded because it is further from some other goal. This results in having \kastarmax{} behaving in a somewhat similar manner to UCS, and thus for large number of goals its \open{} will contain fewer states than \kastarmin{}. 
-Having fewer number of states in \open{} impact the costs $C_{gen}$ and $C_{r}$, 
-since we implemented \open{} using a binary heap, and thus the runtime of reordering \open{} and inserting states into \open{} depends on the size of \open{}. Indeed, the assumption that $C_{gen}$ and $C_r$ are constant throughout the search is only an abstraction of the true costs, which depends on the exact implementation. 
+
+An interesting observation is that \kastarmax{} is faster than Eager
+\kastarmin{} when the number of goals is large (see $k=64$ and $128$). To
+explain this, consider the illustrations in Figure~\ref{fig:min-vs-max}. They
+show an example of running \kastarmin{} (left) and \kastarmax{} (right) on the
+same \kgs{} instance. The yellow points represent states in \open{}, the brown
+points represent states in \closed{}, the graph points are states that were not
+generated so far, and the white points and the black points are impassable
+obstacles. As can be seen, the behavior of \kastarmin{} and \kastarmax{} are
+different: \kastarmin{} runs greedily towards prospective goals, showing clear
+trajectories protruding from the search frontier, while \kastarmax{}
+demonstrates a behavior that is more similar to uniform cost search. This
+occurs  because when a child is generated in \kastarmin{}, if it is closer to
+the closest goal than its parent then it will be expanded next, resulting in
+these protruding DFS-like trajectories towards the goal. By contrast, in
+\kastarmax{} even if a state generates a child state that is closer to the
+closest goal, it still may not be expanded because it is further from some
+other goal. This results in having \kastarmax{} behaving in a somewhat similar
+manner to UCS, and thus for large number of goals its \open{} will contain
+fewer states than \kastarmin{}.\footnote{Having fewer 
+states in \open{} also impacts the costs $C_{gen}$ and $C_{r}$, since we implemented
+\open{} using a binary heap, and thus the runtime of reordering \open{} and
+inserting states into \open{} depends on the size of \open{}. Indeed, the
+assumption that $C_{gen}$ and $C_r$ are constant throughout the search is only
+an abstraction of the true costs, which depends on the exact implementation.}
 
 
 
@@ -1449,38 +1553,95 @@ since we implemented \open{} using a binary heap, and thus the runtime of reorde
     \caption{This figure plots the runtime (in ms.) of the different \kgs{} algorithms as a function of the distance between the goals, for a \kgs{} problem with two goals ($k=2$).}
     \label{fig:2-goal}
 \end{figure}
-In the second type of experiments we performed, we focused on \kgs{} problems with two goals ($k=2$), and investigated the impact of the distance between these goals on the effectiveness of the evaluated algorithms. Here a randomly %\roni{TODO: Fill in with Meir: how was the random walks performed, how was the binning, etc.}
 
 
-The results are given in Figure~\ref{fig:2-goal}. The $x$-axis is the distance between the goals, and the $y$-axis shows the average runtime in milliseconds of the different algorithms. We compared Lazy \kastarmin{}, \kastarmax{}, \kxastar{}, and UCS.
-We observe several trends.
-First, for a 2 goal problem it is clear that uniform cost search is the worst option.
-This is reasonable as UCS is only effective when the number of goals is large (since it does not use a heuristic). %This is reasonable, as it does not use a heuristic to guide its search and the number of goals is small.
+
+In the second type of experiments we performed, we focused on \kgs{} problems
+with two goals ($k=2$), and investigated the impact of the distance between
+these goals on the effectiveness of the evaluated algorithms.
+
+%\roni{TODO: Fill in with Meir: how was the random walks performed, how was the binning, etc.}
+
+
+The results are given in Figure~\ref{fig:2-goal}. The $x$-axis is the distance
+between the goals, and the $y$-axis shows the average runtime in milliseconds
+of the different algorithms. We compared Lazy \kastarmin{}, \kastarmax{},
+\kxastar{}, and UCS. We observe several trends. First, for a 2 goal problem it
+is clear that uniform cost search is the worst option. This is reasonable as
+UCS is only effective when the number of goals is large (since it does not use
+a heuristic).
+%This is reasonable, as it does not use a heuristic to guide its search and the number of goals is small.
 Second, observe that when the goals are close to each other, both \kastarmin{}
-and \kastarmax{} outperform \kxastar{}. This matches our analysis (Section~\ref{sec:theoretical-analysis}), where if the goals are close to each other we expect that many states will be expanded by both independent \astar{} searches, which is  exactly the redundancy \kastar{} was designed to solve. More formally,
-when the goals are close to each other, then the intersection of $Gen(\text{\astari{1}})$ and $Gen(\text{\astari{2}})$ will be large and so $|Gen(\text{\astari{1}})\cup Gen(\text{\astari{2}})|$ will be significantly smaller than $|Gen(\text{\astari{1}})|+|Gen(\text{\astari{2}})|$, providing an advantage to \kastarmin{} (see Table~\ref{tab:time-analysis}).
-Following this explanation, we observe that as the goals chosen become further from each other (going right on the $x$ axis of Figure~\ref{fig:2-goal}), we see the advantage of \kastar{} over 2 \astar{} searches diminishes. Indeed, the performance of \kastarmin{}  and \kxastar{} converge when the goals are furthest from each other.
-Lastly, we observe that \kastarmin{} dominates \kastarmax{} and in general all other approaches, always being better or on par with the other algorithms.
+and \kastarmax{} outperform \kxastar{}. This matches our analysis
+(Section~\ref{sec:theoretical-analysis}), where if the goals are close to each
+other we expect that many states will be expanded by both independent \astar{}
+searches, which is  exactly the redundancy \kastar{} was designed to solve.
+More formally, when the goals are close to each other, then the intersection of
+$Gen(\text{\astari{1}})$ and $Gen(\text{\astari{2}})$ will be large and so
+$|Gen(\text{\astari{1}})\cup Gen(\text{\astari{2}})|$ will be significantly
+smaller than $|Gen(\text{\astari{1}})|+|Gen(\text{\astari{2}})|$, providing an
+advantage to \kastarmin{} (see Table~\ref{tab:time-analysis}). Following this
+explanation, we observe that as the goals chosen become distant from each other
+(going right on the $x$ axis of Figure~\ref{fig:2-goal}), we see that the
+advantage of \kastar{} over 2 \astar{} searches diminishes. Indeed, the
+performance of \kastarmin{}  and \kxastar{} converge when the goals are
+furthest from each other. Lastly, we observe that \kastarmin{} dominates
+\kastarmax{} and in general all other approaches, always being better or on par
+with the other algorithms.
 
 \subsubsection{The Impact of Using Stronger Heuristics}
 
 \begin{figure*}
     \includegraphics[width=\textwidth]{heuristic-power_cropped.pdf}
-    \caption{The runtime of Lazy \kastarmin{}, \kxastar{}, and UCS for different number of goals (the different plots) and difference number of pivots using in the heuristic computation. The heuristic is more accurate but slower to compute.}
+\caption{The runtime of Lazy \kastarmin{}, \kxastar{}, and UCS for different
+number of goals (the different plots) and difference number of pivots using in
+the heuristic computation. With more pivots, the heuristic is more accurate but
+slower to compute.}
     \label{fig:dh-results}
 \end{figure*}
 
-Next, we evaluated the impact of using a stronger, i.e., more accurate, heuristic, on the performance of the proposed \kgs{} algorithms. To this end, we used differential heuristics (DH)~\cite{goldberg2005computing,ng2002predicting,sturtevant2009memory} instead of Octile distance. DH is a more sophisticated memory-based heuristic for grid pathfinding that works as follows. A set of states (cells in the grid) are chosen  referred to as the {\em pivots}. Then, in a pre-processing step, we compute and store in memory the shortest path between every state and these pivot states. When computing the heuristic for a state that is not part of these states,
-one can use the triangle inequality to obtain an admissible heuristic. For more details, see~\cite{goldberg2005computing,ng2002predicting,sturtevant2009memory}.
-Importantly, adding more pivots results in a more accurate heuristic,
-but one that takes longer time to compute.
 
-Thus, DH is especially useful for our analysis, as it can be tuned to more accurate and more costly to compute. The results of Lazy \kastarmin{}, \kxastar{} and UCS are given in Figure~\ref{fig:dh-results}. Each of the 5 plots show the average runtime in milliseconds on the $y$ axis, and the $x$ axis shows the number of pivots used for computing the heuristic.
-The different plots show the results for 4, 8, 16, 32, 64, and 128 goals.
-As expected, the runtime of UCS is unaffected by the number of pivots, since it does not use a heuristic. Also, if we fix the number of pivots and observe the impact of increasing the number of goals, the benefit of using heuristic search over plain UCS diminishes. Eventually, when solving for 128 goals, UCS dominates both \kastarmin{} and \kxastar{}. This follows the same trends observed for the Octile distance results given in Table~\ref{tab:pathfinding-runtime}, and the explanation we provided for these results hold here too. %is the same as tehre. %solving for large number of goals eventually
+Next, we evaluated the impact of using a stronger, more accurate heuristic, on
+the performance of the proposed \kgs{} algorithms. To this end, we used
+differential heuristics
+(DH)~\cite{goldberg2005computing,ng2002predicting,sturtevant2009memory} instead
+of Octile distance. DH is a more sophisticated memory-based heuristic for grid
+pathfinding that works as follows. A set of states (cells in the grid) are
+chosen  referred to as the {\em pivots}. Then, in a pre-processing step, we
+compute and store in memory the shortest path between every state and these
+pivot states. When computing the heuristic for a state that is not part of
+these states, one can use the triangle inequality to obtain an admissible
+heuristic. For more details,
+see~\cite{goldberg2005computing,ng2002predicting,sturtevant2009memory}.
+Importantly, adding more pivots results in a more accurate heuristic, but one
+that takes longer time to compute.
 
-Next, consider the impact of adding pivots -- i.e., using a stronger but more costly heuristic.
-For the \kxastar{}, we observe that adding pivots always helps reducing runtime. For \kastarmin{}, however, adding pivots improves runtime only for cases when the number of goals was not very large. For example, when $k=32$, using more than 4 pivots actually degrades the performance of \kastarmin{}. These results conform with out theoretical analysis: adding pivots increases $C_h$, which is incurred more times in \kastarmin{} than in \kxastar{} (see Table~\ref{tab:time-analysis}).
+
+Thus, DH is especially useful for our analysis, as it can be tuned to more
+accurate and more costly to compute. The results of Lazy \kastarmin{},
+\kxastar{} and UCS are given in Figure~\ref{fig:dh-results}. The different
+plots show the results for 4, 8, 16, 32, 64, and 128 goals.The $y$ axis shows
+the average runtime in milliseconds and the $x$ axis shows the number of pivots
+used for computing the heuristic. As expected, the runtime of UCS is unaffected
+by the number of pivots, since it does not use a heuristic. Also, if we fix the
+number of pivots and observe the impact of increasing the number of goals, the
+benefit of using heuristic search over plain UCS diminishes. Eventually, when
+solving for 128 goals, UCS dominates both \kastarmin{} and \kxastar{}. This
+follows the same trends observed for the Octile distance results given in
+Table~\ref{tab:pathfinding-runtime}, and the explanation we provided for these
+results hold here too.
+%is the same as tehre. %solving for large number of goals eventually
+
+%[[AF: in the figure please reword the "per Goal" to be consistent with the terminology in this paper. In other places too.]]
+
+Next, consider the impact of adding pivots -- i.e., using a stronger but more
+costly heuristic. For \kxastar{}, we observe that adding pivots always helps
+reducing runtime. For \kastarmin{}, however, adding pivots improves runtime
+only for cases when the number of goals was not very large. For example, when
+$k=32$, using more than 4 pivots actually degrades the performance of
+\kastarmin{}. These results conform with out theoretical analysis: adding
+pivots increases $C_h$, which is incurred more times in \kastarmin{} than in
+\kxastar{} (see Table~\ref{tab:time-analysis}).
 
 %This is done  \kastar{} and \kxastar{} in
 
@@ -1489,31 +1650,43 @@ For the \kxastar{}, we observe that adding pivots always helps reducing runtime.
 
 
 
-Next, we present the results for the pancake puzzle. The heuristic used was the GAP heuristic~\cite{helmert2010landmark}, adjusted so that it is suitable for different goal states.
+
+Next, we present the results for the pancake puzzle. The heuristic used was the
+GAP heuristic~\cite{helmert2010landmark}, adjusted so that it is suitable for
+different goal states.
 %\roni{Meir: what was the heuristic used? how were the states generated? how many instances?}
-We experimented with 1, 2, 4, 8 and 16 goals ($k$). For every $k$ we generated 100 random instances, where goal $g_1$ was the standard pancake goal state (where the pancakes are stacked by size) and the other goals are random permutations.
+We experimented with 1, 2, 4, 8 and 16 goals ($k$). For every $k$ we generated
+100 random instances, where goal $g_1$ was the standard pancake goal state
+(where the pancakes are stacked by size) and the other goals are random
+permutations. %[[AF: so in fact, it is equivalent to the case where they are all random permutations]]\roni{Not sure why we should mention this?}
 
 
 \begin{table}[]
-	\centering
-	\begin{tabular}{|r|r|r|r|r|}
-		\hline
-		\multicolumn{1}{|l|}{}            & \multicolumn{2}{c|}{Runtime (ms.)}                                       & \multicolumn{2}{c|}{Generated} \\ \hline
-		\multicolumn{1}{|c|}{\# Pancakes} & \multicolumn{1}{c}{\kastarmax{}} & \multicolumn{1}{c|}{Uniform} & \multicolumn{1}{c}{\kastarmax{}} & \multicolumn{1}{c|}{Uniform} \\ \hline
-		6                               & 0.34                                      & 0.46                        & 994                                       & 2,287                       \\
-		7                               & 2.57                                      & 4.06                        & 8,617                                     & 21,059                      \\
-		8                               & 22.95                                     & 40.25                       & 74,745                                    & 188,946                     \\
-		9                               & 410.81                                    & 717.64                      & 787,481                                   &
-		1,973,420\\
-		\hline
-	\end{tabular}
-	\caption{Running time (in ms.) and number of generated states for solving \kgs{} with two goals
-		in the Pancake puzzle domain using UCS and \kastarmax{}.}
-	\label{tab:pancake-max-uniform}
+    \centering
+    \begin{tabular}{|r|r|r|r|r|}
+        \hline
+        \multicolumn{1}{|l|}{}            & \multicolumn{2}{c|}{Runtime (ms.)}                                       & \multicolumn{2}{c|}{Generated} \\ \hline
+        \multicolumn{1}{|c|}{\# Pancakes} & \multicolumn{1}{c}{\kastarmax{}} & \multicolumn{1}{c|}{Uniform} & \multicolumn{1}{c}{\kastarmax{}} & \multicolumn{1}{c|}{Uniform} \\ \hline
+        6                               & 0.34                                      & 0.46                        & 994                                       & 2,287                       \\
+        7                               & 2.57                                      & 4.06                        & 8,617                                     & 21,059                      \\
+        8                               & 22.95                                     & 40.25                       & 74,745                                    & 188,946                     \\
+        9                               & 410.81                                    & 717.64                      & 787,481                                   &
+        1,973,420\\
+        \hline
+    \end{tabular}
+    \caption{Running time (in ms.) and number of generated states for solving \kgs{} with two goals
+        in the Pancake puzzle domain using UCS and \kastarmax{}.}
+    \label{tab:pancake-max-uniform}
 \end{table}
 
-The first result we report is that UCS and \kastarmax{}
-could not solve even small-sized problems even for $k=2$. Average runtime and number of states generated  for $k=2$ and pancakes of size up to 9 are given in Table~\ref{tab:pancake-max-uniform}. These results are not surprising, because in exponential domains running a search without a heuristic is not practical, and \kastarmax{} can behave similar to UCS (as shown also in Figure~\ref{fig:min-vs-max}).
+
+The first result we report is that UCS and \kastarmax{} could not solve even
+small-sized problems even for $k=2$. Average runtime and number of states
+generated  for $k=2$ and pancakes of size up to 9 are given in
+Table~\ref{tab:pancake-max-uniform}. These results are not surprising, because
+in exponential domains running a search without a heuristic is not practical,
+and \kastarmax{} can behave similar to UCS (as shown also in
+Figure~\ref{fig:min-vs-max}).
 
 
 \subsubsection{The Impact of Varying the Number of Goals}
@@ -1542,8 +1715,20 @@ could not solve even small-sized problems even for $k=2$. Average runtime and nu
   \end{table*}
 
 
-\kastarmin{} and \kxastar{} were able to solve larger pancake puzzle instances. Therefore, we were able to evaluate
- the impact of varying the number of goals on their performance. Table~\ref{tab:pancake-minf-k-searches} presents their results for the 10 and 20 pancakes puzzle and different number of goals. As expected, \kastarmin{} usually generates fewer states. Nonetheless, the difference, in terms of number of states generated, is very small in this domain.  Moreover, the runtime of \kastar{} is constantly longer than the runtime of \kxastar{}, and the gap between them grows when the number of goals increase. This is because in exponential domains the intersection between the sets of states generated by each search is small compared to size of the last $f$ layer of each search. \roni{Meir and Ariel, I'm looking for a nicer explanation. Any thoughts?}\roni{I am not sure how the ``denied'' column help explain this. If we have many denied states doesn't it mean that the intersection was actually large?}
+
+\kastarmin{} and \kxastar{} were able to solve larger pancake puzzle instances.
+Therefore, we were able to evaluate  the impact of varying the number of goals
+on their performance. Table~\ref{tab:pancake-minf-k-searches} presents their
+results for the 10 and 20 pancakes puzzle and different number of goals. As
+expected, \kastarmin{} usually generates fewer states. Nonetheless, the
+difference, in terms of number of states generated, is very small in this
+domain.  Moreover, the runtime of \kastar{} is constantly larger than the
+runtime of \kxastar{}, and the difference between them grows when the number of
+goals increase. This is because in exponential domains the intersection between
+the sets of states generated by each search is small compared to size of the
+last $f$ layer of each search which is quite large. 
+
+%\roni{Meir and Ariel, I'm looking for a nicer explanation. Any thoughts?}\roni{I am not sure how the ``denied'' column help explain this. If we have many denied states doesn't it mean that the intersection was actually large? }[[AF: I added some text but I think it is OK]]
 
 
 \begin{figure}
@@ -1553,19 +1738,38 @@ could not solve even small-sized problems even for $k=2$. Average runtime and nu
 \end{figure}
 
 \subsubsection{The Impact of the Distance between Goals}
-Next, we evaluated the impact of varying the distance between the goals, focusing on \kgs{} problems with two goals. 
-To do so, we generate 1,000 problem instances for this experiment by choosing the standard goal state (where all pancakes are ordered nicely) and performing a limited number of random walks from it: 10 problem instances were generated by a single random step from the standard goal, 
-the subsequent 10 problem instances were generated by two random steps from the standard goal, and so on. 
-Then, each instance was solved optimally to find the exact distance between the goals, and the results of instances with similar
-distance were bucketed together. 
+
+Next, we evaluated the impact of varying the distance between the goals,
+focusing on \kgs{} problems with two goals. To do so, we generate 1,000 problem
+instances for this experiment by choosing the standard goal state (where all
+pancakes are ordered nicely) and performing a limited number of random walks
+from it: 10 problem instances were generated by a single random step from the
+standard goal, the subsequent 10 problem instances were generated by two random
+steps from the standard goal, and so on. Then, each instance was solved
+optimally to find the exact distance between the goals, and the results of
+instances with similar distance were bucketed together.
 
 
 
-%To gain a deeper insight into the behavior of the various \kgs{} algorithm in this domain, we performed additional experiments.  
-Figure~\ref{fig:2-goal-pancake} plots the runtime of Lazy \kastarmin{} and \kxastar{} for these \kgs{} instances with different distances between them (depicted in the $x$-axis). Here, we show the relative runtime of \kastarmin{} compared to \kxastar{}. So values smaller than one correspond to cases where \kastarmin{} was faster than \kxastar{} and values larger than one correspond to cases where \kxastar{} was faster. 
+%To gain a deeper insight into the behavior of the various \kgs{} algorithm in this domain, we performed additional experiments.
 
-As we observed in the grid path finding domain, when the goals are very close, \kastarmin{} is better that \kxastar{}, as there is a large intersection between the states generated by the individual \astar{} searches. However, we observe here that unlike the grid path finding domain, the advantage of \kastarmin{} quickly disappears, and for cases where the goals are more than 5 steps apart it is better to use \kxastar{}. To explain this, note that the pancake puzzle is an exponential domain. Therefore, even if the two goals are relatively close to each other, the search spaces corresponding to finding each of them can be them 
-may have a relatively small overlap. Consequently, \kastarmin{} will perform poorly compared to \kxastar{}. 
+Figure~\ref{fig:2-goal-pancake} plots the runtime of Lazy \kastarmin{} and
+\kxastar{} for these \kgs{} instances with different distances between them
+(depicted in the $x$-axis). Here, we show the relative runtime of \kastarmin{}
+compared to \kxastar{}. So values smaller than one correspond to cases where
+\kastarmin{} was faster than \kxastar{} and values larger than one correspond
+to cases where \kxastar{} was faster.
+
+As we observed in the grid path finding domain, when the goals are very close,
+\kastarmin{} is better that \kxastar{}, as there is a large intersection
+between the states generated by the individual \astar{} searches. However, we
+observe here that unlike the grid path finding domain, the advantage of
+\kastarmin{} quickly disappears, and for cases where the goals are more than 5
+steps apart it is better to use \kxastar{}. To explain this, note that the
+pancake puzzle is an exponential domain. Therefore, even if the two goals are
+relatively close to each other, the search spaces corresponding to finding each
+of them can be them may have a relatively small overlap. Consequently,
+\kastarmin{} will perform poorly compared to \kxastar{}.
 
 % This supports our analysis, as in exponential domains a small distance between the goals can result in needing a very large number of unique states to expand per goal.
 
@@ -1573,12 +1777,13 @@ may have a relatively small overlap. Consequently, \kastarmin{} will perform poo
 
 To conclude our experimental results, we observed the following trends:
 \begin{enumerate}
-    \item \kastarmin{} usually outperforms \kastarmax{}, but not always. Lazy \kastarmin{} outperforms both.
+    \item Eager \kastarmin{} usually outperforms \kastarmax{}, but not always. Lazy \kastarmin{} outperforms both.
     \item When the number of goals becomes very large, simply running UCS is the best option, as it does not spend time on heuristic computations.
     \item In the grid pathfinding domain, which is a polynomial domain, many states are generated by more than one search, and consequently \kastar{} is advantageous compared to \kxastar{} searches.
-    \item In the pancake domain, which is an exponential domain, 
+    \item In the pancake domain, which is an exponential domain,
     only relatively few states were generated by more than one search,
-    and so running $k$ individual searches (\kxastar{}) is usually faster than running \kastar{}.  
+    and so running $k$ individual searches (\kxastar{}) is usually faster than running
+    \kastar{}, unless the goals are very close to each other.
 \end{enumerate}
 
 
@@ -1587,32 +1792,106 @@ To conclude our experimental results, we observed the following trends:
 \section{Related work}
 \label{sec:related-work}
 
-\kgs{} is similar to many previously studied problems. As mentioned in the introduction, \kgs{} is different from TSP in that in TSP the task is to find a shortest path that passes through a set of vertices, while in \kgs{} that task is to find $k$ shortest path, one to each vertex. %In that sense it is similar to the minimal spanning tree (MST) problem, but we only require optimal path to a selected set of $k$ vertices and not to all vertices (as in MST).
-\kgs{} is also different from a disjunction of $k$ goals, i.e., from the case where there are $k$ possible goals and the task is to find the lowest cost path to the closest one. Unlike this case of a disjunction of $k$ goals, in \kgs\ we must find the shortest path to each of the goals, and not just to the closest one.
+\kgs{} is similar to many previously studied problems. As mentioned in the
+introduction, \kgs{} is different from TSP in that in TSP the task is to find a
+shortest path that passes through a set of vertices, while in \kgs{} that task
+is to find $k$ shortest path, one to each vertex.
+%In that sense it is similar to the minimal spanning tree (MST) problem, but we only require optimal path to a selected set of $k$ vertices and not to all vertices (as in MST).
 
-Somewhat related is the work on {\em multi-objective search}, where we have multiple objectives function that we wish to optimize. For example, in a navigation application one may want to optimize for path length and also for ease of navigation. An optimal solution to a multi-objective optimization problem is usually a solution that is Pareto-optimal, and it is often the case that one would like the set of all Pareto-optimal solutions. This is fundamentally different from \kgs{}, where we have a single optimization criteria -- we must have the lowest-cost path to all $k$ goals.
+
+\kgs{} is also different from a disjunction of $k$ goals, i.e., from the case
+where there are $k$ possible goals and the task is to find the lowest cost path
+to the closest one. Unlike this case of a disjunction of $k$ goals, in \kgs\ we
+must find the shortest path to each of the goals, and not just to the closest
+one.
 
 
-The \kgs{} problem is related to the problem addressed by incremental search algorithms such as Lifelong Planning \astar{}~\cite{koenig2004lifelong},  D*-Lite~\cite{koenig2005fast}, and Path-Adaptive A*~\cite{hernandez2015reusing}. Incremental search algorithm are designed to solve a sequence of search problems, where the start and goal of these search problems are the same, but the underlying graph has changed. The key idea in incremental search algorithms is to re-use information from previous searches to solve faster the current search problem. However, unlike the incremental search setting is different from \kgs{}: in incremental search we have one goal and the environment is dynamic, while in \kgs{} we have $k$ goals but assume the environment does not change.
+Somewhat related is the work on {\em multi-objective search}, where we have
+multiple objectives function that we wish to optimize. For example, in a
+navigation application one may want to optimize for path length and also for
+ease of navigation. An optimal solution to a multi-objective optimization
+problem is usually a solution that is Pareto-optimal, and it is often the case
+that one would like the set of all Pareto-optimal solutions. This is
+fundamentally different from \kgs{}, where we have a single optimization
+criteria -- we must have the lowest-cost path to all $k$ goals.
 
-Another related problem is the moving-target search problem~\cite{koenig2007speeding,ishida1991moving}. Moving-target search problems are search problems where the goal changes during the search. This is different from \kgs{} where the goals do not change during the search, but we know upfront the $k$ goals. In the next section we discuss possible directions for future research in which \kgs{} is compiled to a moving target search problem or an incremental search setting. %existing incremental search algorithms and existing moving-target search algorithms are adap
+The \kgs{} problem is related to the problem addressed by incremental search
+algorithms such as Lifelong Planning \astar{}~\cite{koenig2004lifelong},
+D*-Lite~\cite{koenig2005fast}, and Path-Adaptive
+A*~\cite{hernandez2015reusing}. Incremental search algorithm are designed to
+solve a sequence of search problems, where the start and goal of these search
+problems are the same, but the underlying graph has changed. The key idea in
+incremental search algorithms is to re-use information from previous searches
+to solve faster the current search problem. However, unlike the incremental
+search setting is different from \kgs{}: in incremental search we have one goal
+and the environment is dynamic, while in \kgs{} we have $k$ goals but assume
+the environment does not change.
+
+Another related problem is the moving-target search
+problem~\cite{koenig2007speeding,ishida1991moving}. Moving-target search
+problems are search problems where the goal changes during the search. This is
+different from \kgs{} where the goals do not change during the search, but we
+know upfront the $k$ goals. In the next section we discuss possible directions
+for future research in which \kgs{} is compiled to a moving target
+search problem or an incremental search setting. %existing incremental search algorithms and existing moving-target search algorithms are adap
 
 
 \section{Conclusion and Future Work}
-In this work we studied the \kgs{} problem, and analyzed two fundamental approaches for solving it: $k$ single-goal searches and a single search for $k$ goals. We analyzed the deficiencies of $k$ single-goal searches and formalized \kastar{}, a single algorithm that searches for $k$ goals together.
-Sevearl variants of \kastar{} were presented: \kastarmax{}, Eager \kastarmin{}, Eager$^+$ \kastarmin{}, and Lazy \kastarmin{}. Given an admissible heuristic, both Eager and Lazy \kastarmin{} are sound and complete, and if the heuristic is consistent so is \kastarmax{}. We then analyzed all the proposed algorithms theoretically, comparing their memory requirements and runtime. Finally, we performed an experimental study on two representative domains: one with a state space that is polynomially in the input and one with a state space that is exponential in the input. Empirically, we showed that Lazy \kastarmin{} dominates the other \kastar{} variants. In addition, our results suggest that
-in polynomial domains it is usually the case that running \kastar{} is better than \kxastar{}, but in exponential domains \kxastar{} is usually better. In addition, if the number of goals is very large then running UCS is the best option.
+
+In this work we studied the \kgs{} problem, and analyzed two fundamental
+approaches for solving it: $k$ single-goal searches and a single search for $k$
+goals. We analyzed the deficiencies of $k$ single-goal searches and formalized
+\kastar{}, a single algorithm that searches for $k$ goals together. Several
+variants of \kastar{} were presented: \kastarmax{}, Eager \kastarmin{},
+Eager$^+$ \kastarmin{}, and Lazy \kastarmin{}. Given an admissible heuristic,
+both Eager and Lazy \kastarmin{} are sound and complete, and if the heuristic
+is consistent so is \kastarmax{}. We then analyzed all the proposed algorithms
+theoretically, comparing their memory requirements and runtime. Finally, we
+performed an experimental study on two representative domains: one with a state
+space that is polynomially in the input and one with a state space that is
+exponential in the input. Empirically, we showed that Lazy \kastarmin{}
+dominates the other \kastar{} variants. In addition, our results suggest that
+in polynomial domains it is usually the case that running \kastar{} is better
+than \kxastar{}, but in exponential domains \kxastar{} is usually better.
+Finally, if the number of goals is very large then running UCS is the best
+option.
 
 
-This work is, to the best of our knowledge, the first study of using heuristic search techniques to solve \kgs{}. There are several exciting directions for future work. First, we only explored in this work how to avoid some of the redundant computations done when performing $k$ individual searches. As mentioned briefly in Section~\ref{sec:k-one-goal}, a different way to benefit from searching for multiple goals is that while searching for one goal one can learn valuable information about the underlying graph, which may later be used to improve the search. This can include, for example, using learning techniques to improve the quality of the heuristic.
+
+This work is, to the best of our knowledge, the first study of using heuristic
+search techniques to solve \kgs{}. There are several exciting directions for
+future work. First, we only explored in this work how to avoid some of the
+redundant computations done when performing $k$ individual searches. As
+mentioned briefly in Section~\ref{sec:k-one-goal}, a different way to benefit
+from searching for multiple goals is that while searching for one goal one can
+learn valuable information about the underlying graph, which may later be used
+to improve the search. This can include, for example, using learning techniques
+to improve the quality of the heuristic.
+
+We give two possible directions for future work where such learning from
+experience can occur. One way to do so is to improve the available heuristics
+by using knowledge about the shortest path found so far. For example, in
+undirected graphs the difference between the heuristic for one goal and the
+heuristic between the goals is actually an admissible heuristic that may be
+more accurate than the given heuristic $(h_1,\ldots h_k)$. 
+%[[AF: better explain what you mean. What is your new heuristic? Define it precisely.]]\roni{No, this is a future work section, not the body of the paper. Defining things precisely would be too formal for this part of the paper.}
+This idea is
+inspired from memory-based heuristics used by path finding
+algorithms~\cite{sturtevant2007memory,sturtevant2009memory,goldenberg2011theCompressed}.
 
 
-We give two possible directions for future work where such learning from experience can occur. 
-One way to do so is to improve the available heuristics by using knowledge about the shortest path found so far. For example, in undirected graphs the difference between the heuristic for one goal and the heuristic between the goals is actually an admissible heuristic that may be more accurate than the given heuristic $(h_1,\ldots h_k)$. This idea is inspired from memory-based heuristics used by path finding algorithms~\cite{sturtevant2007memory,sturtevant2009memory,goldenberg2011theCompressed}.
-
-Another way to learn information about the search space is to compile \kgs{} to an incremental search problem. This can be done by adding an artificial vertex that is connected to all goals, and running the search from this goal to the start state. Then, every iteration of the incremental search algorithm will change the weight of the edges from the artificial goal to the actual goal, setting the edge to exactly one goal with zero weight and all other edges as unpassable. This compilation may enable using incremental search algorithm such as Path-Adaptive A*~\cite{hernandez2015reusing} to solve the \kgs{} problem. 
-A challenge in such an approach is how to choose the order of goals that will be solved, so as to optimize the amount of information learned between searches. 
-Also, we believe that a similar approach for solving \kgs{} can be done by compiling it to a moving target search problem. 
+Another way to learn information about the search space is to compile \kgs{} to
+an incremental search problem. This can be done by adding an artificial vertex
+that is connected to all goals, and running the search from this goal to the
+start state. Then, every iteration of the incremental search algorithm will
+change the weight of the edges from the artificial goal to the actual goal,
+setting the edge to exactly one goal with zero weight and all other edges as
+unpassable. This compilation may enable using incremental search algorithm such
+as Path-Adaptive A*~\cite{hernandez2015reusing} to solve the \kgs{} problem. A
+challenge in such an approach is how to choose the order of goals that will be
+solved, so as to optimize the amount of information learned between searches.
+Also, we believe that a similar approach for solving \kgs{} can be done by
+compiling it to a moving target search problem.
 
 
 
@@ -1625,7 +1904,9 @@ Also, we believe that a similar approach for solving \kgs{} can be done by compi
 % \end{figure}
 
 \section*{Acknowledgements}
-Thanks!
+
+Financial support for this research was in part provided by Israel Science
+Foundation (ISF) grant \#417/13.
 
 \bibliographystyle{abbrv}
 \bibliography{library}
